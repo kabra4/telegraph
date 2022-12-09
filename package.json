@@ -1,0 +1,27 @@
+{
+  "name": "telegraph",
+  "version": "1.0.0",
+  "description": "testing for telegraph work",
+  "main": "index.js",
+  "scripts": {
+    "test": "test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kabra4/telegraph.git"
+  },
+  "keywords": [
+    "telegraph",
+    "typescript"
+  ],
+  "author": "Akbar",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/kabra4/telegraph/issues"
+  },
+  "homepage": "https://github.com/kabra4/telegraph#readme",
+  "devDependencies": {
+    "tslint": "^6.1.3",
+    "typescript": "^4.9.4"
+  }
+}
