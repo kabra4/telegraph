@@ -1,0 +1,82 @@
+table user {
+  id int [pk]
+  tg_id text 
+  tg_username text
+  name text
+  surename text
+  bio text
+  phone_number int
+  language text
+  active boolean
+  superuser boolean
+  last_active datetime
+  created datetime
+  updated datetime
+}
+
+table group {
+  id int [pk]
+  tg_id text
+  name text
+  description text
+  tg_username text
+  language text
+  created datetime
+  updated datetime
+}
+
+
+table task {
+  id int [pk]
+  beforehand_task_owner_id int [ref: > task.id]
+  name text
+  user_id int [ref: > user.id]
+  group_id int [ref: > group.id]
+  created datetime
+  updated datetime
+  
+  is_repeatable boolean
+  repeat_type repeat_type
+  repeat_scheme_id int [ref: > repeat_scheme.id]
+  planned_on datetime
+  
+  trigger_timestamp timestamp
+  last_triggered_timestamp timestamp
+  trigger_count int
+  action_type action_type
+  
+  has_beforehand_notification boolean
+  beforehand_seconds int
+  goal_id int [ref: > goal.id]
+  content_text text
+}
+
+enum action_type {
+  message
+  delete
+  notify_all
+  beforehand_notification
+  get_goal_status
+}
+
+table goal {
+  id int [pk]
+  name text
+  success_count int 
+  total_count int
+  streak_count int
+  last_success datetime
+}
+
+table repeat_scheme {
+  id int [pk]
+  months_of_year text
+  days_of_week text
+  days_of_month text 
+  times_of_day text
+  interval_minutes int
+}
+
+// "lang": "^[a-z]{2}(-[A-Z]{2})?$"
+// "phone": "^[\\+]?[(]?[0-9]{3}[)]?[-\\s\\.]?[0-9]{3}[-\\s\\.]?[0-9]{4,6}$"
+// "times_of_day": "^(([0-1]?[0-9]|2[0-3]):[0-5][0-9])(,\\s*([0-1]?[0-9]|2[0-3]):[0-5][0-9])*$"
