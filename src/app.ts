@@ -1,10 +1,11 @@
 import { Context, Markup, Telegraf, Telegram } from "telegraf";
 import { Update } from "typegram";
 import dotenv from "dotenv";
-import PocketBase from "pocketbase";
-import { I18n } from "i18n";
-// const { I18n } = require("i18n");
-const pb = new PocketBase("http://127.0.0.1:8090");
+// import PocketBase from "pocketbase";
+// import { I18n } from "i18n";
+
+import TgUser from "./models/TgUser";
+// const pb = new PocketBase("http://127.0.0.1:8090");
 dotenv.config();
 
 // I18n.configure({
@@ -37,19 +38,19 @@ const chatId: string = process.env.CHAT_ID as string;
 bot.start((ctx) => {
   ctx.reply("Hello " + ctx.from.first_name + "!");
   // add user to db
-  const user = pb
-    .collection("tg_users")
-    .create({
-      tg_id: ctx.from.id,
-      name: ctx.from.first_name,
-      surname: ctx.from.last_name,
-      language: ctx.from.language_code,
-      last_active: new Date(),
-    })
-    .then((res) => {
-      // send message to user with his id
-      ctx.reply("Your id is " + res.id);
-    });
+  // const user = pb
+  //   .collection("tg_users")
+  //   .create({
+  //     tg_id: ctx.from.id,
+  //     name: ctx.from.first_name,
+  //     surname: ctx.from.last_name,
+  //     language: ctx.from.language_code,
+  //     last_active: new Date(),
+  //   })
+  //   .then((res) => {
+  //     // send message to user with his id
+  //     ctx.reply("Your id is " + res.id);
+  //   });
 });
 
 bot.help((ctx) => {
@@ -67,13 +68,17 @@ bot.command("quit", (ctx) => {
 });
 
 bot.command("test", (ctx) => {
-  pb.collection("tg_users")
-    .getFullList()
-    .then((res) => {
-      console.log(res);
-
-      ctx.reply("All users: " + JSON.stringify(res));
-    });
+  // pb.collection("tg_users")
+  //   .getFullList()
+  //   .then((res) => {
+  //     console.log(res);
+  //     ctx.reply("All users: " + JSON.stringify(res));
+  //   });
+  const users = new TgUser().getAll().then((res) => {
+    console.log(res);
+    ctx.reply("All users: " + JSON.stringify(res));
+  });
+  // console.log(users);
 });
 
 bot.command("keyboard", (ctx) => {

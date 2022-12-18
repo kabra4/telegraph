@@ -9,9 +9,9 @@
   },
   "scripts": {
     "test": "test",
-    "build": "tsc",
-    "build-watch": "tsc -w",
-    "start": "node dist/app.js"
+    "build": "tsc --build --clean",
+    "ts-watch": "tsc -w",
+    "start": "node --experimental-specifier-resolution=node dist/app.js"
   },
   "repository": {
     "type": "git",
