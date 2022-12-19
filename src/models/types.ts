@@ -6,7 +6,6 @@ type ITgUser = {
   tg_username: string;
   name: string;
   surename: string;
-  bio: string;
   phone_number: string;
   language: string;
   active: boolean;

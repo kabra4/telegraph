@@ -4,7 +4,7 @@
 
 import PocketBase from "pocketbase";
 
-export default abstract class Model {
+export default class Model {
   // the name of the collection in the database
   protected collectionName: string;
 
@@ -17,7 +17,7 @@ export default abstract class Model {
   //   public updatedAt: Date | null;
 
   // the data of the model
-  public data: any;
+  public data: { [key: string]: any } = {};
 
   // the constructor of the model
   // takes the id of the model
@@ -58,7 +58,7 @@ export default abstract class Model {
   // the function to create a new model
   // takes the data of the model
   // returns the data of the model
-  public async create(data: any): Promise<string> {
+  public async create(data: any): Promise<any> {
     this.data = await this.collection.create(data);
     return this.data;
   }
@@ -94,19 +94,19 @@ export default abstract class Model {
     return this.collectionName;
   }
 
-  public async getAll(): Promise<any> {
+  public async getAll(): Promise<{ [key: string]: any }[]> {
     return await this.collection.getFullList();
   }
 
-  public async getOne(id: string): Promise<any> {
+  public async getOne(id: string | number): Promise<{ [key: string]: any }> {
     return await this.collection.getOne(id);
   }
 
-  public async update(id: string, data: any): Promise<any> {
+  public async update(id: string, data: any): Promise<{ [key: string]: any }> {
     return await this.collection.update(id, data);
   }
 
-  public async deleteOne(id: string): Promise<any> {
+  public async deleteOne(id: string): Promise<{ [key: string]: any }> {
     return await this.collection.delete(id);
   }
 
