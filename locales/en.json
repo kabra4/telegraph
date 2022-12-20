@@ -1,0 +1,16 @@
+{
+    "start": "This is hello text in english",
+    "help": "This is help text in english",
+    "lang": {
+        "name": "English",
+        "code": "en",
+        "question": "What language do you want to use?",
+        "options": {
+            "en": "English",
+            "ru": "Russian",
+            "uz": "Uzbek"
+        },
+        "language_changed": "Language changed to English",
+        "language_has_not_changed": "Language has not changed"
+    }
+}

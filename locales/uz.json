@@ -1,0 +1,16 @@
+{
+    "start": "Bu start teksti o'zbek tilida",
+    "help": "Bu help teksti o'zbek tilida",
+    "lang": {
+        "name": "O'zbek",
+        "code": "uz",
+        "question": "Tilni tanlang",
+        "options": {
+            "en": "Ingliz tili",
+            "ru": "Rus tili",
+            "uz": "O'zbek tili"
+        },
+        "language_changed": "Til o'zgartirildi",
+        "language_has_not_changed": "Til o'zgartirilmadi"
+    }
+}

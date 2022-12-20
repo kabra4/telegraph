@@ -3,13 +3,17 @@
 // and the data that is stored in the model with the help of pocketbase
 
 import PocketBase from "pocketbase";
+import dotenv from "dotenv";
+dotenv.config();
 
 export default class Model {
   // the name of the collection in the database
   protected collectionName: string;
 
   // the collection in the database
+  protected pb: PocketBase = new PocketBase("http://127.0.0.1:8090");
   protected collection: any;
+  protected collections: any;
 
   // the id of the model
   public id: string;
@@ -27,8 +31,9 @@ export default class Model {
     // this.updatedAt = null;
     this.collectionName = collectionName;
 
-    const pb = new PocketBase("http://127.0.0.1:8090");
-    this.collection = pb.collection(this.collectionName);
+    this.pb = new PocketBase("http://127.0.0.1:8090");
+    this.collections = this.pb.collections;
+    this.collection = this.pb.collection(this.collectionName);
 
     if (this.id !== "") {
       this.getData();

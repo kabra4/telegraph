@@ -5,19 +5,22 @@ import i18n from "./configs/i18n.config";
 import { LocaleService } from "./helpers/LocaleService";
 import TgUser from "./models/TgUser";
 import CommandController from "./controllers/CommandsController";
+import ActionController from "./controllers/ActionController";
 
 dotenv.config();
 const ls = new LocaleService(i18n);
 
 const token: string = process.env.TELEGRAM_BOT_TOKEN as string;
 
-const telegram: Telegram = new Telegram(token);
+// const telegram: Telegram = new Telegram(token);
 
 const bot: Telegraf<Context<Update>> = new Telegraf(token);
 
-const chatId: string = process.env.CHAT_ID as string;
+// const chatId: string = process.env.CHAT_ID as string;
 
 const commandController = new CommandController(bot);
+const actionController = new ActionController(bot);
+
 // bot.start((ctx) => {
 //   ctx.reply("Hello " + ctx.from.first_name + "!");
 //   // add user to db
@@ -75,56 +78,62 @@ bot.command("test", (ctx) => {
   //     console.log(res);
   //     ctx.reply("All users: " + JSON.stringify(res));
   //   });
-  ctx.reply(
-    // print text of the message
-    "You wrote: " + ctx.message.text
-  );
+
+  // ctx.reply(
+  //   // print text of the message
+  //   "You wrote: " + ctx.message.text
+  // );
+
   // const users = new TgUser().getAll().then((res) => {
   //   console.log(res);
   //   ctx.reply("All users: " + JSON.stringify(res));
   // });
   // console.log(users);
+
+  const user = new TgUser().getByTgId(ctx.from.id).then((res) => {
+    ctx.reply("Your id is " + JSON.stringify(res));
+  });
 });
 
-bot.command("keyboard", (ctx) => {
-  ctx.reply(
-    "Keyboard 111",
-    Markup.inlineKeyboard([
-      Markup.button.callback("First option", "first opiton"),
-      Markup.button.callback("Second option", "second"),
-    ])
-  );
-});
+// bot.command("keyboard", (ctx) => {
+//   ctx.reply(
+//     "Keyboard 111",
+//     Markup.inlineKeyboard([
+//       Markup.button.callback("First option", "first opiton"),
+//       Markup.button.callback("Second option", "second"),
+//     ])
+//   );
+// });
 
-bot.on("text", (ctx) => {
-  if (ctx.message.text === "set ru") {
-    ls.setLocale("ru");
-    ctx.reply("Language changed to Russian");
-    ctx.reply(ls.__("Hello"));
-  }
-  ctx.reply(
-    "You choose the " +
-      (ctx.message.text === "first" ? "First" : "Second") +
-      " Option!"
-  );
+// bot.on("text", (ctx) => {
+//   if (ctx.message.text === "set ru") {
+//     ls.setLocale("ru");
+//     ctx.reply("Language changed to Russian");
+//     ctx.reply(ls.__("Hello"));
+//   }
+//   ctx.reply(
+//     "You choose the " +
+//       (ctx.message.text === "first" ? "First" : "Second") +
+//       " Option!"
+//   );
 
-  if (chatId) {
-    telegram.sendMessage(
-      chatId,
-      "This message was sent without your interaction!"
-    );
-  }
-});
+//   if (chatId) {
+//     telegram.sendMessage(
+//       chatId,
+//       "This message was sent without your interaction!"
+//     );
+//   }
+// });
 
 // bot callback query
-bot.on("callback_query", (ctx) => {
-  // log the callback query
-  console.log(ctx.callbackQuery);
-  console.log(ctx.answerCbQuery);
+// bot.on("callback_query", (ctx) => {
+//   // log the callback query
+//   console.log(ctx.callbackQuery);
+//   console.log(ctx.answerCbQuery);
 
-  ctx.reply("You choose the " + ctx.callbackQuery.message + " Option!");
-  // console.log(ctx.callbackQuery.message);
-});
+//   ctx.reply("You choose the " + ctx.callbackQuery.message + " Option!");
+//   // console.log(ctx.callbackQuery.message);
+// });
 
 bot.launch();
 
