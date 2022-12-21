@@ -9,9 +9,22 @@ type ITgUser = {
   phone_number: string;
   language: string;
   active: boolean;
+  remainder_options: RemainderOptions;
   superuser: boolean;
   last_active: Date;
   is_currently_doing: string;
+};
+
+type RemainderOptions = {
+  repeat: boolean;
+  repeat_cycle: string;
+  repeat_pattern: string;
+  date: string;
+  checked_dates: string[];
+  time: string;
+  beforehand_selected: boolean;
+  has_beforehand: string;
+  beforehand_time: string;
 };
 
 type IGroup = {
@@ -48,11 +61,11 @@ type IRepeatScheme = {
   interval_minutes: number;
 };
 
-type ITask = {
+type IRemainder = {
   id: string | undefined;
   created: string | undefined;
   updated: string | undefined;
-  beforehand_task_owner_id: string;
+  beforehand_remainder_owner_id: string;
   name: string;
   group_id: string;
   user_id: string;
@@ -75,4 +88,4 @@ type ITask = {
 };
 
 // export all types
-export { ITgUser, IGroup, IGoal, IRepeatScheme, ITask };
+export { ITgUser, IGroup, IGoal, IRepeatScheme, IRemainder };

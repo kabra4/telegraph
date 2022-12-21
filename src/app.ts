@@ -4,8 +4,11 @@ import dotenv from "dotenv";
 import i18n from "./configs/i18n.config";
 import { LocaleService } from "./helpers/LocaleService";
 import TgUser from "./models/TgUser";
-import CommandController from "./controllers/CommandsController";
-import ActionController from "./controllers/ActionController";
+import BasicCommandController from "./controllers/CommandsController";
+// import ActionController from "./controllers/ActionController";
+import LanguageCommand from "./commands/LanguageCommand";
+import RemainderCommand from "./commands/RemainderCommand";
+import CalendarMaker from "./helpers/CalendarMaker";
 
 dotenv.config();
 const ls = new LocaleService(i18n);
@@ -18,8 +21,10 @@ const bot: Telegraf<Context<Update>> = new Telegraf(token);
 
 // const chatId: string = process.env.CHAT_ID as string;
 
-const commandController = new CommandController(bot);
-const actionController = new ActionController(bot);
+const commandController = new BasicCommandController(bot);
+const languageCommand = new LanguageCommand(bot);
+const remainderCommand = new RemainderCommand(bot);
+// const actionController = new ActionController(bot);
 
 // bot.start((ctx) => {
 //   ctx.reply("Hello " + ctx.from.first_name + "!");
@@ -72,27 +77,18 @@ bot.command("quit", (ctx) => {
 });
 
 bot.command("test", (ctx) => {
-  // pb.collection("tg_users")
-  //   .getFullList()
-  //   .then((res) => {
-  //     console.log(res);
-  //     ctx.reply("All users: " + JSON.stringify(res));
-  //   });
-
-  // ctx.reply(
-  //   // print text of the message
-  //   "You wrote: " + ctx.message.text
-  // );
-
+  ctx.reply(
+    // print text of the message
+    "You wrote: " + ctx.message.text
+  );
   // const users = new TgUser().getAll().then((res) => {
   //   console.log(res);
   //   ctx.reply("All users: " + JSON.stringify(res));
   // });
   // console.log(users);
-
-  const user = new TgUser().getByTgId(ctx.from.id).then((res) => {
-    ctx.reply("Your id is " + JSON.stringify(res));
-  });
+  // const user = new TgUser().getByTgId(ctx.from.id).then((res) => {
+  //   ctx.reply("Your id is " + JSON.stringify(res));
+  // });
 });
 
 // bot.command("keyboard", (ctx) => {

@@ -42,9 +42,15 @@ export default class Model {
 
   // the function to get the data of the model
   // returns the data of the model
-  public async getData(): Promise<any> {
-    this.data = await this.collection.getOne(this.id);
-    return this.data;
+  public async getData(): Promise<void> {
+    try {
+      this.data = await this.collection.getOne(this.id);
+      this.id = this.data.id;
+    } catch (err) {
+      return;
+    }
+    // this.data = await this.collection.getOne(this.id);
+    // return this.data;
   }
 
   // the function to get the id of the model
@@ -81,10 +87,17 @@ export default class Model {
   // returns the data of the model
   public async save(): Promise<any> {
     if (this.id === "") {
-      throw new Error("Model id is not set");
+      console.log("Model id is not set");
+
+      // throw new Error("Model id is not set");
     }
-    this.data = await this.collection.update(this.id, this.data);
-    return this.data;
+    try {
+      this.data = await this.collection.update(this.id, this.data);
+    } catch (err) {
+      console.log(err);
+      // this.data = await this.collection.update(this.id, this.data);
+      // return this.data;
+    }
   }
 
   // the function to get the collection of the model
@@ -103,8 +116,24 @@ export default class Model {
     return await this.collection.getFullList();
   }
 
-  public async getOne(id: string | number): Promise<{ [key: string]: any }> {
-    return await this.collection.getOne(id);
+  public async getOne(
+    id: string | number,
+    args: { [key: string]: any } = {}
+  ): Promise<{ [key: string]: any }> {
+    return await this.collection.getOne(id, args);
+  }
+
+  public async getFullList(
+    args: { [key: string]: any } = {}
+  ): Promise<{ [key: string]: any }[]> {
+    return await this.collection.getFullList(args);
+  }
+
+  public async getFirstListItem(
+    filterText: string,
+    args: { [key: string]: any } = {}
+  ): Promise<{ [key: string]: any }> {
+    return await this.collection.getFirstListItem(filterText, args);
   }
 
   public async update(id: string, data: any): Promise<{ [key: string]: any }> {

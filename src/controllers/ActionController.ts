@@ -4,7 +4,7 @@ import TgUser from "../models/TgUser";
 import i18n from "../configs/i18n.config";
 import { LocaleService } from "../helpers/LocaleService";
 // import LanguageController from "../commands/Language";
-import LanguageCommand from "../commands/Language";
+import LanguageCommand from "../commands/LanguageCommand";
 
 // const ls = LocaleService.Instance;
 
@@ -18,20 +18,8 @@ export default class ActionController {
   constructor(bot: Telegraf<Context<Update>>) {
     this.bot = bot;
     this.telegram = this.bot.telegram;
-    this.bot.action("lang.en", (ctx) => this.changeLanguageTo(ctx, "en"));
-    this.bot.action("lang.ru", (ctx) => this.changeLanguageTo(ctx, "ru"));
-    this.bot.action("lang.uz", (ctx) => this.changeLanguageTo(ctx, "uz"));
-  }
-
-  // the function to handle the callback query
-  // takes the context of the bot
-  protected changeLanguageTo(
-    ctx: NarrowedContext<
-      Context<Update>,
-      Update.CallbackQueryUpdate<CallbackQuery>
-    >,
-    lang: string
-  ): void {
-    new LanguageCommand().changeLanguageTo(ctx, lang);
+    // this.bot.action("lang.en", (ctx) => this.changeLanguageTo(ctx, "en"));
+    // this.bot.action("lang.ru", (ctx) => this.changeLanguageTo(ctx, "ru"));
+    // this.bot.action("lang.uz", (ctx) => this.changeLanguageTo(ctx, "uz"));
   }
 }

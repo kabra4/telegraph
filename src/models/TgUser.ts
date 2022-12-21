@@ -7,16 +7,26 @@ export default class TgUser extends Model {
   public declare data: ITgUser;
   // the constructor of the tg user model
   // takes the id of the tg user model
-  constructor(id: string = "", collectionName: string = "tg_users") {
+  constructor(
+    id: string = "",
+    collectionName: string = "tg_users",
+    tg_id: string | number = ""
+  ) {
     super(id, collectionName);
+    if (tg_id !== "") {
+      this.setByTgId(tg_id);
+    }
   }
 
   // the function to get the tg user by the telegram id
   // takes the telegram id
   // returns the tg user
-  public async getByTgId(tgId: string | number): Promise<ITgUser> {
+  public async getByTgId(
+    tgId: string | number,
+    args: {} = {}
+  ): Promise<ITgUser> {
     try {
-      return await this.collection.getFirstListItem(`tg_id="${tgId}"`);
+      return (await this.getFirstListItem(`tg_id="${tgId}"`, args)) as ITgUser;
     } catch (err) {
       // console.error(err);
       return {} as ITgUser;
@@ -36,18 +46,18 @@ export default class TgUser extends Model {
     }
   }
 
-  public async setByTgId(tgId: string | number, data: ITgUser): Promise<void> {
+  public async setByTgId(tgId: string | number, args?: {}): Promise<void> {
     try {
-      await this.getByTgId(tgId).then((res) => {
+      await this.getByTgId(tgId, args).then((res) => {
         if (res) {
           this.data = res;
           if (res.id) {
             this.id = res.id;
           }
-          // this.update(data);
         }
       });
     } catch (err) {
+      console.log("line");
       return;
     }
   }
@@ -73,7 +83,6 @@ export default class TgUser extends Model {
         this.updateLanguageById(res.id, lang, res);
       }
     });
-    // return await this.update(this.getIdByTgId(tgId), { language: lang });
   }
 
   public async getLocaleByTgId(tgId: number | string): Promise<string> {

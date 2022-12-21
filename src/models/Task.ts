@@ -1,13 +1,13 @@
 // TaskModel class extends Model class
 // uses ITask interface
 import Model from "./Model";
-import { ITask } from "./types";
+import { IRemainder } from "./types";
 
-export default class Task extends Model {
-  public declare data: ITask;
+export default class Remainder extends Model {
+  public declare data: IRemainder;
   // the constructor of the task model
   // takes the id of the task model
-  constructor(id: string = "", collectionName: string = "tasks") {
+  constructor(id: string = "", collectionName: string = "remainders") {
     super(id, collectionName);
   }
 }

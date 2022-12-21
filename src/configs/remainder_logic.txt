@@ -1,0 +1,43 @@
+// this is logic for the remainder of the event
+
+Is this remainder repeatable?: yes/no
+yes:
+    How should remainder repeat?: every year/month/days of week/daily
+    year:
+        "calendar" to choose the date
+        send time/times separated with comma
+        beforehand notification?: yes/no
+        yes:
+            options: a day before/a week/a month/custom
+            custom:
+                send me: 1d/1w/1m before
+                finish
+            else:
+                finish
+        no:
+            finish
+    month:
+        "calendar with multichoice"
+        send time/times separated with comma
+        finish
+    days of week:
+        "weekdays with multichoice"
+        send time/times separated with comma
+        finish
+    daily:
+        send time/times separated with comma
+        finish
+no:
+    "calendar" to choose the date
+    send time/times separated with comma
+    beforehand notification?: yes/no
+    yes:
+        options: a day before/a week/a month/custom
+        custom:
+            send me: 1d 1w 1m before
+            finish
+        else:
+            finish
+    no:
+        finish
+            

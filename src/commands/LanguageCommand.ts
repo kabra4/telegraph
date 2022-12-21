@@ -2,8 +2,6 @@
 
 import { Context, Markup, NarrowedContext, Telegraf } from "telegraf";
 import { CallbackQuery, Message, Update } from "typegram";
-import dotenv from "dotenv";
-import i18n from "../configs/i18n.config";
 import { LocaleService } from "../helpers/LocaleService";
 import TgUser from "../models/TgUser";
 
@@ -11,11 +9,17 @@ const ls = LocaleService.Instance;
 
 export default class LanguageCommand {
   // the bot
-  //   private bot: Telegraf<Context<Update>>;
+    private bot: Telegraf<Context<Update>>;
 
   // the constructor of the language controller
   // takes the bot
-  constructor() {}
+  constructor(bot: Telegraf<Context<Update>>) {
+    this.bot = bot;
+    this.bot.command("lang", (ctx) => this.lang(ctx));
+    this.bot.action("lang.en", (ctx) => this.changeLanguageTo(ctx, "en"));
+    this.bot.action("lang.ru", (ctx) => this.changeLanguageTo(ctx, "ru"));
+    this.bot.action("lang.uz", (ctx) => this.changeLanguageTo(ctx, "uz"));
+  }
 
   // the function to handle the lang command
   // takes the context of the bot
@@ -51,7 +55,7 @@ export default class LanguageCommand {
     lang: string
   ): void {
     new TgUser().updateLanguageByTgId(ctx.callbackQuery.from.id, lang);
-    i18n.setLocale(lang);
+    ls.setLocale(lang);
     // edit the message to success message
     ctx.editMessageText(ls.__("lang.language_changed"));
     // ctx.reply(ls.__("lang.success"));

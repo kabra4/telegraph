@@ -1,6 +1,12 @@
 {
     "start": "Bu start teksti o'zbek tilida",
-    "help": "Bu help teksti o'zbek tilida",
+    "help": {
+        "0": "Bu botning barcha buyruqlari",
+        "1": "/start - boshlash",
+        "2": "/help - yordam",
+        "3": "/lang - tilni tanlash",
+        "4": "/rmdr - eslatma qo'shish"
+    },
     "lang": {
         "name": "O'zbek",
         "code": "uz",
