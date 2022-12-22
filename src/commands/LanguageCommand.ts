@@ -9,7 +9,7 @@ const ls = LocaleService.Instance;
 
 export default class LanguageCommand {
   // the bot
-    private bot: Telegraf<Context<Update>>;
+  private bot: Telegraf<Context<Update>>;
 
   // the constructor of the language controller
   // takes the bot
@@ -33,7 +33,7 @@ export default class LanguageCommand {
     >
   ): void {
     new TgUser().getByTgId(ctx.from.id).then((res) => {
-      i18n.setLocale(res.language);
+      ls.setLocale(res.language);
       ctx.reply(
         ls.__("lang.question"),
         Markup.inlineKeyboard([

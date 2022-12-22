@@ -1,12 +1,12 @@
 {
 	"start": "Это текст старта на русском",
 	"help": {
-        "0": "Это все команды бота",
-        "1": "/start - начать бот",
-        "2": "/help - помощь",
-        "3": "/lang - сменить язык",
-        "4": "/rmdr - напоминание"
-    },
+		"0": "Это все команды бота",
+		"1": "/start - начать бот",
+		"2": "/help - помощь",
+		"3": "/lang - сменить язык",
+		"4": "/rmdr - напоминание"
+	},
 	"lang": {
 		"name": "Русский",
 		"code": "ru",
@@ -19,5 +19,53 @@
 		"language_changed": "Язык изменен на Русский",
 		"language_has_not_changed": "Язык не был изменен",
 		"success": "lang.success"
+	},
+	"remainder": {
+		"calendar": {
+			"months": {
+				"january": "Январь",
+				"february": "Февраль",
+				"march": "Март",
+				"april": "Апрель",
+				"may": "Май",
+				"june": "Июнь",
+				"july": "Июль",
+				"august": "Август",
+				"september": "Сентябрь",
+				"october": "Октябрь",
+				"november": "Ноябрь",
+				"december": "Декабрь"
+			},
+			"weekdays": {
+				"monday": "Понедельник",
+				"tuesday": "Вторник",
+				"wednesday": "Среда",
+				"thursday": "Четверг",
+				"friday": "Пятница",
+				"saturday": "Суббота",
+				"sunday": "Воскресенье"
+			}
+		},
+		"questions": {
+			"start": {
+				"text": "remainder.questions.start.text",
+				"options": {
+					"yes": "remainder.questions.start.options.yes",
+					"no": "remainder.questions.start.options.no"
+				}
+			},
+			"repeat": {
+				"text": "remainder.questions.repeat.text",
+				"options": {
+					"daily": "remainder.questions.repeat.options.daily",
+					"weekly": "remainder.questions.repeat.options.weekly",
+					"monthly": "remainder.questions.repeat.options.monthly",
+					"yearly": "remainder.questions.repeat.options.yearly"
+				}
+			},
+			"calendar_1": {
+				"text": "remainder.questions.calendar_1.text"
+			}
+		}
 	}
 }

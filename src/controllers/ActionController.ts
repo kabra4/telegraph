@@ -8,7 +8,7 @@ import LanguageCommand from "../commands/LanguageCommand";
 
 // const ls = LocaleService.Instance;
 
-export default class ActionController {
+export default class CallbackController {
   // the bot
   private bot: Telegraf<Context<Update>>;
   private telegram: Telegram;
@@ -18,8 +18,11 @@ export default class ActionController {
   constructor(bot: Telegraf<Context<Update>>) {
     this.bot = bot;
     this.telegram = this.bot.telegram;
-    // this.bot.action("lang.en", (ctx) => this.changeLanguageTo(ctx, "en"));
-    // this.bot.action("lang.ru", (ctx) => this.changeLanguageTo(ctx, "ru"));
-    // this.bot.action("lang.uz", (ctx) => this.changeLanguageTo(ctx, "uz"));
+    // this.bot.on("callback_query", async (ctx) => {
+    //   if (ctx.callbackQuery.message) {
+    //     ctx.reply(ctx.callbackQuery.data);
+    //   }
+    // });
+    // this.bot.action(new RegExp("\w+"), (ctx) => this.callback(ctx));
   }
 }

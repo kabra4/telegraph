@@ -20,19 +20,19 @@ export default class CalendarMaker {
   // takes the bot
   constructor() {}
 
-  public static makeCalendar(
-    year_?: number,
-    month_?: number,
+  public static async makeCalendar(
+    locale_: string = "en",
+    year_: number = 0,
+    month_: number = 100
     // checked_dates?: string[],
-    locale: string = "en"
-  ): Markup.Markup<InlineKeyboardMarkup> {
+  ): Promise<Markup.Markup<InlineKeyboardMarkup>> {
     const now = new Date();
-    const year = year_ || now.getFullYear();
-    const month = month_ || now.getMonth() + 1;
+    const year = year_ !== 0 ? year_ : now.getFullYear();
+    const month = month_ !== 100 ? month_ : now.getMonth() + 1;
     const dataIgnore = this.cbText("IGNORE", year, month, 0);
     const keyboard = [];
     // get month name
-    const monthName = new Date(year, month - 1).toLocaleString("en-us", {
+    const monthName = new Date(year, month - 1).toLocaleString(locale_, {
       month: "long",
     });
 
@@ -40,9 +40,9 @@ export default class CalendarMaker {
     keyboard.push([Markup.button.callback(monthName, dataIgnore)]);
 
     const weekDays =
-      locale === "en"
+      locale_ === "en"
         ? this._weekdays.en
-        : locale === "ru"
+        : locale_ === "ru"
         ? this._weekdays.ru
         : this._weekdays.uz;
     // put weekdays in the second row
@@ -54,7 +54,9 @@ export default class CalendarMaker {
 
     // create calendar
     let calendar = this.getCalendarGrid(year, month);
+
     calendar.forEach((week) => {
+      if (this.isArrayEmpty(week)) return;
       keyboard.push(
         week.map((date) => {
           if (!date) {
@@ -73,14 +75,38 @@ export default class CalendarMaker {
     });
 
     // add navigation buttons
-    const prevMonth = this.cbText("PREV", year, month - 1, 0);
-    const nextMonth = this.cbText("NEXT", year, month + 1, 0);
+    const prevMonth = this.cbText(
+      "PREV",
+      year,
+      month.toString().padStart(2, "0"),
+      "00"
+    );
+    const today_button = this.cbText(
+      "TODAY",
+      now.getFullYear(),
+      (now.getMonth() + 1).toString().padStart(2, "0"),
+      now.getDate()
+    );
+    const nextMonth = this.cbText(
+      "NEXT",
+      year,
+      month.toString().padStart(2, "0"),
+      "00"
+    );
     keyboard.push([
       Markup.button.callback("<", prevMonth),
+      Markup.button.callback("Today", today_button),
       Markup.button.callback(">", nextMonth),
     ]);
 
     return Markup.inlineKeyboard(keyboard);
+  }
+
+  private static isArrayEmpty(arr: any[]): boolean {
+    for (let i = 0; i < arr.length; i++) {
+      if (arr[i]) return false;
+    }
+    return true;
   }
 
   private static cbText(
@@ -107,7 +133,13 @@ export default class CalendarMaker {
         } else if (day > daysInMonth) {
           week.push("");
         } else {
-          week.push(day.toString().padStart(2, "0") + "-" + month + "-" + year);
+          week.push(
+            day.toString().padStart(2, "0") +
+              "-" +
+              month.toString().padStart(2, "0") +
+              "-" +
+              year
+          );
           day++;
         }
       }

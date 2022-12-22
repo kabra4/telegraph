@@ -17,6 +17,7 @@ type ITgUser = {
 
 type RemainderOptions = {
   repeat: boolean;
+  repeat_is_checked: boolean;
   repeat_cycle: string;
   repeat_pattern: string;
   date: string;
