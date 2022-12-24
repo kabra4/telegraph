@@ -89,4 +89,4 @@ type IRemainder = {
 };
 
 // export all types
-export { ITgUser, IGroup, IGoal, IRepeatScheme, IRemainder };
+export { ITgUser, IGroup, IGoal, IRepeatScheme, IRemainder, RemainderOptions };

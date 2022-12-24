@@ -9,58 +9,32 @@ import BasicCommandController from "./controllers/CommandsController";
 import LanguageCommand from "./commands/LanguageCommand";
 import RemainderCommand from "./commands/RemainderCommand";
 import CalendarMaker from "./helpers/CalendarMaker";
+import { RemainderOptions } from "./models/types";
 
 dotenv.config();
 const ls = new LocaleService(i18n);
+
+// interface MyContext extends Context<Update> {
+//   user_id: string;
+//   tg_id: string;
+//   user_lang: string;
+//   remainderOptions: RemainderOptions;
+// }
 
 const token: string = process.env.TELEGRAM_BOT_TOKEN as string;
 
 // const telegram: Telegram = new Telegram(token);
 
 const bot: Telegraf<Context<Update>> = new Telegraf(token);
-
-// const chatId: string = process.env.CHAT_ID as string;
+// const bot: Telegraf<MyContext> = new Telegraf(token);
 
 const commandController = new BasicCommandController(bot);
 const languageCommand = new LanguageCommand(bot);
 const remainderCommand = new RemainderCommand(bot);
-// const actionController = new ActionController(bot);
 
-// bot.start((ctx) => {
-//   ctx.reply("Hello " + ctx.from.first_name + "!");
-//   // add user to db
-//   // const user = pb
-//   //   .collection("tg_users")
-//   //   .create({
-//   //     tg_id: ctx.from.id,
-//   //     name: ctx.from.first_name,
-//   //     surname: ctx.from.last_name,
-//   //     language: ctx.from.language_code,
-//   //     last_active: new Date(),
-//   //   })
-//   //   .then((res) => {
-//   //     // send message to user with his id
-//   //     ctx.reply("Your id is " + res.id);
-//   //   });
-//   const user = new TgUser().getByTgId(ctx.from.id).then((res) => {
-//     if (res === null || res === undefined || Object.keys(res).length === 0) {
-//       new TgUser()
-//         .create({
-//           tg_id: ctx.from.id,
-//           name: ctx.from.first_name,
-//           surname: ctx.from.last_name,
-//           language: ctx.from.language_code,
-//           last_active: new Date(),
-//           phone_number: "",
-//         })
-//         .then((res) => {
-//           ctx.reply("Your new id is " + res.id);
-//         });
-//     } else {
-//       ctx.reply("Your id is " + res.id);
-//     }
-//   });
-// });
+// const chatId: string = process.env.CHAT_ID as string;
+
+// const actionController = new ActionController(bot);
 
 // bot.help((ctx) => {
 //   ctx.reply("Send /start to receive a greeting");
@@ -77,10 +51,9 @@ bot.command("quit", (ctx) => {
 });
 
 bot.command("test", (ctx) => {
-  ctx.reply(
-    // print text of the message
-    "You wrote: " + ctx.message.text
-  );
+  new TgUser()
+    .getByTgId(ctx.from.id)
+    .then((res) => ctx.reply("Your id is " + JSON.stringify(res.id)));
   // const users = new TgUser().getAll().then((res) => {
   //   console.log(res);
   //   ctx.reply("All users: " + JSON.stringify(res));

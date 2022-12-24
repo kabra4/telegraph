@@ -16,6 +16,51 @@ export default class CalendarMaker {
     uz: ["Du", "Se", "Ch", "Pa", "Ju", "Sh", "Ya"],
   };
 
+  private static _monthNames = {
+    en: [
+      "January",
+      "February",
+      "March",
+      "April",
+      "May",
+      "June",
+      "July",
+      "August",
+      "September",
+      "October",
+      "November",
+      "December",
+    ],
+    ru: [
+      "Январь",
+      "Февраль",
+      "Март",
+      "Апрель",
+      "Май",
+      "Июнь",
+      "Июль",
+      "Август",
+      "Сентябрь",
+      "Октябрь",
+      "Ноябрь",
+      "Декабрь",
+    ],
+    uz: [
+      "Yanvar",
+      "Fevral",
+      "Mart",
+      "Aprel",
+      "May",
+      "Iyun",
+      "Iyul",
+      "Avgust",
+      "Sentabr",
+      "Oktabr",
+      "Noyabr",
+      "Dekabr",
+    ],
+  };
+
   // the constructor of the callback query controller
   // takes the bot
   constructor() {}
@@ -65,7 +110,7 @@ export default class CalendarMaker {
           const m = date.slice(3, 5);
           const d = date.slice(0, 2);
           const y = date.slice(6, 10);
-          const data = this.cbText("DATE", y, m, d);
+          const data = this.cbText("DATE", y, m, d, locale_);
           //   const checked = checked_dates?.includes(data);
           const day = d.startsWith("0") ? d.slice(1) : d;
           //   const text = checked ? `✅ ${day}` : day;
@@ -78,20 +123,23 @@ export default class CalendarMaker {
     const prevMonth = this.cbText(
       "PREV",
       year,
-      month.toString().padStart(2, "0"),
-      "00"
+      (month - 1).toString().padStart(2, "0"),
+      "00",
+      locale_
     );
     const today_button = this.cbText(
       "TODAY",
       now.getFullYear(),
       (now.getMonth() + 1).toString().padStart(2, "0"),
-      now.getDate()
+      now.getDate(),
+      locale_
     );
     const nextMonth = this.cbText(
       "NEXT",
       year,
-      month.toString().padStart(2, "0"),
-      "00"
+      (month + 1).toString().padStart(2, "0"),
+      "00",
+      locale_
     );
     keyboard.push([
       Markup.button.callback("<", prevMonth),
@@ -100,6 +148,85 @@ export default class CalendarMaker {
     ]);
 
     return Markup.inlineKeyboard(keyboard);
+  }
+
+  // function to create 4x3 grid of months
+  // gets the year as a parameter
+  // returns a 4x3 grid of months type of Promise<Markup.Markup<InlineKeyboardMarkup>>
+  public static async makeMonthGrid(
+    locale_: string = "en",
+    year_: number = 0
+  ): Promise<Markup.Markup<InlineKeyboardMarkup>> {
+    const now = new Date();
+    const year = year_ !== 0 ? year_ : now.getFullYear();
+    const dataIgnore = this.cbText("IGNORE", year, 0, 0, locale_);
+    const keyboard = [];
+    // get month name
+    const monthName = new Date(year, 0).toLocaleString(locale_, {
+      year: "numeric",
+    });
+
+    // put month name in the first row
+    keyboard.push([Markup.button.callback(monthName, dataIgnore)]);
+    const monthNames =
+      locale_ === "en"
+        ? this._monthNames.en
+        : locale_ === "ru"
+        ? this._monthNames.ru
+        : this._monthNames.uz;
+    // create calendar
+    let calendar = await this.getMonthGrid(year);
+
+    calendar.forEach((week) => {
+      if (this.isArrayEmpty(week)) return;
+      keyboard.push(
+        week.map((date) => {
+          if (!date) {
+            return Markup.button.callback(" ", dataIgnore);
+          }
+
+          const callback_text = this.cbText("MONTH", year, date, "01", locale_);
+
+          return Markup.button.callback(
+            monthNames[Number(date) - 1],
+            callback_text
+          );
+        })
+      );
+    });
+
+    // add navigation buttons
+    const prevMonth = this.cbText("PREVmonth", year - 1, "00", "00", locale_);
+    const current_month_button = this.cbText(
+      "TODAYmonth",
+      now.getFullYear(),
+      (now.getMonth() + 1).toString().padStart(2, "0"),
+      "01",
+      locale_
+    );
+    const nextMonth = this.cbText("NEXTmonth", year + 1, "00", "00", locale_);
+    keyboard.push([
+      Markup.button.callback("<", prevMonth),
+      Markup.button.callback(monthNames[now.getMonth()], current_month_button),
+      Markup.button.callback(">", nextMonth),
+    ]);
+
+    return Markup.inlineKeyboard(keyboard);
+  }
+
+  // function to create 4x3 grid of years
+  // gets the year as a parameter
+  private static async getMonthGrid(year: number): Promise<string[][]> {
+    const grid: any[] = [];
+    let month = 1;
+    for (let i = 0; i < 4; i++) {
+      grid[i] = [];
+      for (let j = 0; j < 3; j++) {
+        grid[i][j] = month.toString().padStart(2, "0");
+        month++;
+      }
+    }
+    return grid;
   }
 
   private static isArrayEmpty(arr: any[]): boolean {
@@ -113,9 +240,10 @@ export default class CalendarMaker {
     prefix: string,
     year: number | string,
     month: number | string,
-    day: number | string
+    day: number | string,
+    locale_: string = "en"
   ): string {
-    return `calendar|${prefix}|${year}-${month}-${day}`;
+    return `calendar|${prefix}|${year}-${month}-${day}|${locale_}`;
   }
 
   // function to create calendar grid of dates for a given month

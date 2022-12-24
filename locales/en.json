@@ -1,5 +1,6 @@
 {
 	"start": "This is hello text in english",
+	"lang_on_start": "Is your language English?\nIf not, type /lang to change language",
 	"help": {
 		"0": "This is all commands",
 		"1": "/start - start bot",

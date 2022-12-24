@@ -32,6 +32,8 @@ export default class RemainderController {
       );
     });
 
+    // this.bot.command("rmdrtest", (ctx) => this.test(ctx));
+
     // receive "date" answer from "calendar"
     // this.bot.action(/IGNORE/, (ctx) => {
     //   return;
@@ -42,15 +44,24 @@ export default class RemainderController {
     );
 
     // calendar navigation buttons
-    this.bot.action(/calendar\|PREV\|\d{4}-\d{2}-\d{2}/, (ctx) =>
+    this.bot.action(/calendar\|PREV(month)?\|\d{4}-\d{2}-\d{2}/, (ctx) =>
       this.processCalendarNavigation(ctx, "prev")
     );
-    this.bot.action(/calendar\|NEXT\|\d{4}-\d{2}-\d{2}/, (ctx) =>
+    this.bot.action(/calendar\|NEXT(month)?\|\d{4}-\d{2}-\d{2}/, (ctx) =>
       this.processCalendarNavigation(ctx, "next")
     );
-    this.bot.action(/calendar\|TODAY\|\d{4}-\d{2}-\d{2}/, (ctx) =>
+    this.bot.action(/calendar\|TODAY(month)?\|\d{4}-\d{2}-\d{2}/, (ctx) =>
       this.processCalendarNavigation(ctx, "today")
     );
+
+    // month calendar
+    this.bot.action(/calendar\|MONTH\|\d{4}-\d{2}-\d{2}/, (ctx) =>
+      this.processMonthCalendar(ctx)
+    );
+  }
+
+  protected async test(ctx: Context<Update>) {
+    ctx.reply("test", await CalendarMaker.makeMonthGrid());
   }
 
   // the function to handle the remainder command
@@ -171,7 +182,8 @@ export default class RemainderController {
       ls.setLocale(user.data.language);
       ctx.editMessageText(
         ls.__("remainder.questions.calendar_1.text"),
-        await CalendarMaker.makeCalendar(user.data.language)
+        await CalendarMaker.makeMonthGrid(user.data.language)
+        // await CalendarMaker.makeCalendar(user.data.language)
       );
     }
   }
@@ -192,10 +204,8 @@ export default class RemainderController {
       ? ctx.callbackQuery.data.split("|")[2]
       : "";
     if (
-      date === "" ||
-      (user.data.remainder_options.repeat_cycle !== "yearly" &&
-        user.data.remainder_options.repeat) ||
-      user.data.is_currently_doing !== "remainder.repeat.pattern"
+      date === ""
+      // (user.data.is_currently_doing === "remainder.repeat.pattern" && user.data.is_currently_doing === "remainder.repeat.pattern")
     ) {
       return;
     }
@@ -225,38 +235,51 @@ export default class RemainderController {
     const date = ctx.has(callbackQuery("data"))
       ? ctx.callbackQuery.data.split("|")[2]
       : "";
-    if (
-      date === "" ||
-      (user.data.remainder_options.repeat_cycle !== "yearly" &&
-        user.data.remainder_options.repeat) ||
-      user.data.is_currently_doing !== "remainder.repeat.pattern"
-    ) {
-      return;
-    }
+    const query = ctx.has(callbackQuery("data")) ? ctx.callbackQuery.data : "";
+    console.log(query);
+    // if (
+    //   date === "" ||
+    //   (user.data.remainder_options.repeat_cycle !== "yearly" &&
+    //     user.data.remainder_options.repeat) ||
+    //   user.data.is_currently_doing !== "remainder.repeat.pattern"
+    // ) {
+    //   return;
+    // }
 
     ls.setLocale(user.data.language);
     if (navigation === "prev") {
       let year = Number(date.split("-")[0]);
       let month = Number(date.split("-")[1]);
-      if (month === 1) {
+      if (month === 0 && !query.includes("month")) {
         year--;
-        month = 13;
+        month = 12;
       }
+      const calendar = query.includes("month")
+        ? await CalendarMaker.makeMonthGrid(user.data.language, year)
+        : query.includes("weekdays")
+        ? await CalendarMaker.makeCalendar(user.data.language, year, month) // TODO: fix this
+        : await CalendarMaker.makeCalendar(user.data.language, year, month);
 
       ctx.editMessageText(
         ls.__("remainder.questions.calendar_1.text"),
-        await CalendarMaker.makeCalendar(user.data.language, year, month - 1)
+        calendar
       );
     } else if (navigation === "next") {
       let year = Number(date.split("-")[0]);
       let month = Number(date.split("-")[1]);
-      if (month === 12) {
+
+      if (month === 13 && !query.includes("month")) {
         year++;
-        month = 0;
+        month = 1;
       }
+      const calendar = query.includes("month")
+        ? await CalendarMaker.makeMonthGrid(user.data.language, year)
+        : query.includes("weekdays")
+        ? await CalendarMaker.makeCalendar(user.data.language, year, month) // TODO: fix this
+        : await CalendarMaker.makeCalendar(user.data.language, year, month);
       ctx.editMessageText(
         ls.__("remainder.questions.calendar_1.text"),
-        await CalendarMaker.makeCalendar(user.data.language, year, month + 1)
+        calendar
       );
     } else {
       ctx.editMessageText(
@@ -265,4 +288,44 @@ export default class RemainderController {
       );
     }
   }
+
+  // the function to process month input
+  // takes the context of the bot
+  public async processMonthCalendar(
+    ctx: NarrowedContext<
+      Context<Update> & {
+        match: RegExpExecArray;
+      },
+      Update.CallbackQueryUpdate<CallbackQuery>
+    >
+  ) {
+    // log the callback query
+    const date = ctx.has(callbackQuery("data"))
+      ? ctx.callbackQuery.data.split("|")[2]
+      : "";
+    const locale_date = ctx.has(callbackQuery("data"))
+      ? ctx.callbackQuery.data.split("|")[3]
+      : "";
+
+    ls.setLocale(locale_date);
+    ctx.editMessageText(
+      ls.__("remainder.questions.calendar_1.text"),
+      // ctx.update,
+      await CalendarMaker.makeCalendar(
+        locale_date,
+        Number(date.split("-")[0]),
+        Number(date.split("-")[1])
+      )
+    );
+  }
+
+  // private async askMonth(ctx) {
+  //   const user = new TgUser();
+  //   await user.setByTgId(ctx.callbackQuery.from.id);
+  //   ls.setLocale(user.data.language);
+  //   ctx.editMessageText(
+  //     ls.__("remainder.questions.calendar_1.text"),
+  //     await CalendarMaker.makeMonthGrid(user.data.language)
+  //   );
+  // }
 }

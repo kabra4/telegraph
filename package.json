@@ -11,6 +11,7 @@
     "test": "test",
     "build": "tsc --build --clean",
     "ts-watch": "tsc -w",
+    "pocketbase": "./pocketbase serve",
     "start": "node --experimental-specifier-resolution=node dist/app.js"
   },
   "repository": {
