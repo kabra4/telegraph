@@ -1,4 +1,4 @@
-// class to control the remainder command of the bot for the user
+// class to control the reminder command of the bot for the user
 
 import { Context, Markup, NarrowedContext, Telegraf } from "telegraf";
 import { CallbackQuery, Message, Update } from "typegram";
@@ -10,12 +10,12 @@ import CalendarMaker from "../helpers/CalendarMaker";
 
 const ls = LocaleService.Instance;
 
-export default class RemainderController {
+export default class ReminderController {
   // the bot
   private bot: Telegraf<Context<Update>>;
   private repeat_cycles: string[] = ["daily", "weekly", "monthly", "yearly"];
 
-  // the constructor of the remainder controller
+  // the constructor of the reminder controller
   // takes the bot
   constructor(bot: Telegraf<Context<Update>>) {
     this.bot = bot;
@@ -23,11 +23,11 @@ export default class RemainderController {
 
     // receive "repeat" answer
     this.bot.action("rmdr.repeat.yes", (ctx) => this.AskRepeatCycle(ctx));
-    // this.bot.action("rmdr.repeat.no", (ctx) => this.remainderRepeatNo(ctx));
+    // this.bot.action("rmdr.repeat.no", (ctx) => this.reminderRepeatNo(ctx));
 
     // receive "repeat cycle" answer
     this.repeat_cycles.forEach((cycle) => {
-      this.bot.action("remainder.questions.repeat.options." + cycle, (ctx) =>
+      this.bot.action("reminder.questions.repeat.options." + cycle, (ctx) =>
         this.processRepeatCycleInput(ctx, cycle)
       );
     });
@@ -58,13 +58,21 @@ export default class RemainderController {
     this.bot.action(/calendar\|MONTH\|\d{4}-\d{2}-\d{2}/, (ctx) =>
       this.processMonthCalendar(ctx)
     );
+
+    // receive "time" answer
+    this.bot.hears(
+      /^((0[0-9]|1[0-9]|2[0-3])[:\.]{1}[0-5][0-9])(,\s*(0[0-9]|1[0-9]|2[0-3])[:\.]{1}[0-5][0-9])*$/,
+      (ctx) => {
+        return; // TODO: implement
+      }
+    );
   }
 
   protected async test(ctx: Context<Update>) {
     ctx.reply("test", await CalendarMaker.makeMonthGrid());
   }
 
-  // the function to handle the remainder command
+  // the function to handle the reminder command
   // takes the context of the bot
   public async Start(
     ctx: NarrowedContext<
@@ -78,29 +86,18 @@ export default class RemainderController {
     if (ctx.message.text == "/rmdr") {
       const user = new TgUser();
       await user.setByTgId(ctx.from.id);
-      user.data.is_currently_doing = "remainder";
-      user.data.remainder_options = {
-        repeat: false,
-        repeat_is_checked: false,
-        repeat_cycle: "",
-        repeat_pattern: "",
-        date: "",
-        checked_dates: [],
-        time: "",
-        beforehand_selected: false,
-        has_beforehand: "",
-        beforehand_time: "",
-      };
+      user.data.is_currently_doing = "reminder";
+      user.resetReminderOptions();
       await user.save();
       ctx.reply(
-        ls.__("remainder.questions.start.text"),
+        ls.__("reminder.questions.start.text"),
         Markup.inlineKeyboard([
           Markup.button.callback(
-            ls.__("remainder.questions.start.options.yes"),
+            ls.__("reminder.questions.start.options.yes"),
             "rmdr.repeat.yes"
           ),
           Markup.button.callback(
-            ls.__("remainder.questions.start.options.no"),
+            ls.__("reminder.questions.start.options.no"),
             "rmdr.repeat.no"
           ),
         ])
@@ -118,41 +115,33 @@ export default class RemainderController {
     const user = new TgUser();
     await user.setByTgId(ctx.callbackQuery.from.id);
 
-    if (user.data.is_currently_doing !== "remainder") return;
+    if (user.data.is_currently_doing !== "reminder") return;
 
-    user.data.remainder_options.repeat = true;
-    user.data.remainder_options.repeat_is_checked = true;
-    user.data.is_currently_doing = "remainder.repeat.cycle";
+    user.data.reminder_options.repeat = true;
+    user.data.reminder_options.repeat_is_checked = true;
+    user.data.is_currently_doing = "reminder.repeat.cycle";
     await user.save();
     ctx.editMessageText(
-      ls.__("remainder.questions.repeat.text"),
+      ls.__("reminder.questions.repeat.text"),
       Markup.inlineKeyboard([
         [
           Markup.button.callback(
-            ls.__(
-              "remainder.questions.repeat.options." + this.repeat_cycles[0]
-            ),
-            "remainder.questions.repeat.options." + this.repeat_cycles[0]
+            ls.__("reminder.questions.repeat.options." + this.repeat_cycles[0]),
+            "reminder.questions.repeat.options." + this.repeat_cycles[0]
           ),
           Markup.button.callback(
-            ls.__(
-              "remainder.questions.repeat.options." + this.repeat_cycles[1]
-            ),
-            "remainder.questions.repeat.options." + this.repeat_cycles[1]
+            ls.__("reminder.questions.repeat.options." + this.repeat_cycles[1]),
+            "reminder.questions.repeat.options." + this.repeat_cycles[1]
           ),
         ],
         [
           Markup.button.callback(
-            ls.__(
-              "remainder.questions.repeat.options." + this.repeat_cycles[2]
-            ),
-            "remainder.questions.repeat.options." + this.repeat_cycles[2]
+            ls.__("reminder.questions.repeat.options." + this.repeat_cycles[2]),
+            "reminder.questions.repeat.options." + this.repeat_cycles[2]
           ),
           Markup.button.callback(
-            ls.__(
-              "remainder.questions.repeat.options." + this.repeat_cycles[3]
-            ),
-            "remainder.questions.repeat.options." + this.repeat_cycles[3]
+            ls.__("reminder.questions.repeat.options." + this.repeat_cycles[3]),
+            "reminder.questions.repeat.options." + this.repeat_cycles[3]
           ),
         ],
       ])
@@ -171,17 +160,17 @@ export default class RemainderController {
     const user = new TgUser();
     await user.setByTgId(ctx.callbackQuery.from.id);
 
-    if (user.data.is_currently_doing !== "remainder.repeat.cycle") return;
+    if (user.data.is_currently_doing !== "reminder.repeat.cycle") return;
 
-    user.data.remainder_options.repeat_cycle = cycle;
-    user.data.is_currently_doing = "remainder.repeat.pattern";
+    user.data.reminder_options.repeat_cycle = cycle;
+    user.data.is_currently_doing = "reminder.repeat.pattern";
     await user.save();
 
     // cycle options
     if (cycle === "yearly") {
       ls.setLocale(user.data.language);
       ctx.editMessageText(
-        ls.__("remainder.questions.calendar_1.text"),
+        ls.__("reminder.questions.calendar_1.text"),
         await CalendarMaker.makeMonthGrid(user.data.language)
         // await CalendarMaker.makeCalendar(user.data.language)
       );
@@ -205,18 +194,18 @@ export default class RemainderController {
       : "";
     if (
       date === ""
-      // (user.data.is_currently_doing === "remainder.repeat.pattern" && user.data.is_currently_doing === "remainder.repeat.pattern")
+      // (user.data.is_currently_doing === "reminder.repeat.pattern" && user.data.is_currently_doing === "reminder.repeat.pattern")
     ) {
       return;
     }
 
-    user.data.remainder_options.date = date;
-    user.data.is_currently_doing = "remainder.repeat.pattern.time";
+    user.data.reminder_options.date = date;
+    user.data.is_currently_doing = "reminder.repeat.pattern.time";
     await user.save();
 
     // ask for time
     ls.setLocale(user.data.language);
-    ctx.editMessageText(ls.__("remainder.questions.send_time.text"));
+    ctx.editMessageText(ls.__("reminder.questions.send_time.text"));
   }
 
   // the function to process the "calendar" navigation
@@ -239,9 +228,9 @@ export default class RemainderController {
     console.log(query);
     // if (
     //   date === "" ||
-    //   (user.data.remainder_options.repeat_cycle !== "yearly" &&
-    //     user.data.remainder_options.repeat) ||
-    //   user.data.is_currently_doing !== "remainder.repeat.pattern"
+    //   (user.data.reminder_options.repeat_cycle !== "yearly" &&
+    //     user.data.reminder_options.repeat) ||
+    //   user.data.is_currently_doing !== "reminder.repeat.pattern"
     // ) {
     //   return;
     // }
@@ -261,7 +250,7 @@ export default class RemainderController {
         : await CalendarMaker.makeCalendar(user.data.language, year, month);
 
       ctx.editMessageText(
-        ls.__("remainder.questions.calendar_1.text"),
+        ls.__("reminder.questions.calendar_1.text"),
         calendar
       );
     } else if (navigation === "next") {
@@ -278,12 +267,12 @@ export default class RemainderController {
         ? await CalendarMaker.makeCalendar(user.data.language, year, month) // TODO: fix this
         : await CalendarMaker.makeCalendar(user.data.language, year, month);
       ctx.editMessageText(
-        ls.__("remainder.questions.calendar_1.text"),
+        ls.__("reminder.questions.calendar_1.text"),
         calendar
       );
     } else {
       ctx.editMessageText(
-        ls.__("remainder.questions.calendar_1.text"),
+        ls.__("reminder.questions.calendar_1.text"),
         await CalendarMaker.makeCalendar(user.data.language)
       );
     }
@@ -309,7 +298,7 @@ export default class RemainderController {
 
     ls.setLocale(locale_date);
     ctx.editMessageText(
-      ls.__("remainder.questions.calendar_1.text"),
+      ls.__("reminder.questions.calendar_1.text"),
       // ctx.update,
       await CalendarMaker.makeCalendar(
         locale_date,
@@ -324,7 +313,7 @@ export default class RemainderController {
   //   await user.setByTgId(ctx.callbackQuery.from.id);
   //   ls.setLocale(user.data.language);
   //   ctx.editMessageText(
-  //     ls.__("remainder.questions.calendar_1.text"),
+  //     ls.__("reminder.questions.calendar_1.text"),
   //     await CalendarMaker.makeMonthGrid(user.data.language)
   //   );
   // }

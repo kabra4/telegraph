@@ -20,7 +20,7 @@
 		"language_changed": "Language changed to English",
 		"language_has_not_changed": "Language has not changed"
 	},
-	"remainder": {
+	"reminder": {
         "calendar": {
             "months": {
                 "january": "January",
@@ -69,10 +69,10 @@
 			"send_time": {
 				"text": "Send the time of the reminder as HH:MM.\nExample: 12:00\nAlso you can send multiple times like this:\n12:00, 13:00, 14:00 (max 5 times)"
 			},
-			"send_remainder_name": {
+			"send_reminder_name": {
 				"text": "Send the name of the reminder"
 			},
-			"send_remainder_text": {
+			"send_reminder_text": {
 				"text": "Send the text of the reminder",
 				"options": {
 					"skip": "Skip"

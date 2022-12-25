@@ -7,9 +7,8 @@ import TgUser from "./models/TgUser";
 import BasicCommandController from "./controllers/CommandsController";
 // import ActionController from "./controllers/ActionController";
 import LanguageCommand from "./commands/LanguageCommand";
-import RemainderCommand from "./commands/RemainderCommand";
+import ReminderCommand from "./commands/ReminderCommand";
 import CalendarMaker from "./helpers/CalendarMaker";
-import { RemainderOptions } from "./models/types";
 
 dotenv.config();
 const ls = new LocaleService(i18n);
@@ -18,7 +17,7 @@ const ls = new LocaleService(i18n);
 //   user_id: string;
 //   tg_id: string;
 //   user_lang: string;
-//   remainderOptions: RemainderOptions;
+//   remainderOptions: ReminderOptions;
 // }
 
 const token: string = process.env.TELEGRAM_BOT_TOKEN as string;
@@ -30,7 +29,7 @@ const bot: Telegraf<Context<Update>> = new Telegraf(token);
 
 const commandController = new BasicCommandController(bot);
 const languageCommand = new LanguageCommand(bot);
-const remainderCommand = new RemainderCommand(bot);
+const reminderCommand = new ReminderCommand(bot);
 
 // const chatId: string = process.env.CHAT_ID as string;
 

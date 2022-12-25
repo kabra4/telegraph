@@ -20,7 +20,7 @@
 		"language_has_not_changed": "Язык не был изменен",
 		"success": "lang.success"
 	},
-	"remainder": {
+	"reminder": {
 		"calendar": {
 			"months": {
 				"january": "Январь",
@@ -48,23 +48,23 @@
 		},
 		"questions": {
 			"start": {
-				"text": "remainder.questions.start.text",
+				"text": "reminder.questions.start.text",
 				"options": {
-					"yes": "remainder.questions.start.options.yes",
-					"no": "remainder.questions.start.options.no"
+					"yes": "reminder.questions.start.options.yes",
+					"no": "reminder.questions.start.options.no"
 				}
 			},
 			"repeat": {
-				"text": "remainder.questions.repeat.text",
+				"text": "reminder.questions.repeat.text",
 				"options": {
-					"daily": "remainder.questions.repeat.options.daily",
-					"weekly": "remainder.questions.repeat.options.weekly",
-					"monthly": "remainder.questions.repeat.options.monthly",
-					"yearly": "remainder.questions.repeat.options.yearly"
+					"daily": "reminder.questions.repeat.options.daily",
+					"weekly": "reminder.questions.repeat.options.weekly",
+					"monthly": "reminder.questions.repeat.options.monthly",
+					"yearly": "reminder.questions.repeat.options.yearly"
 				}
 			},
 			"calendar_1": {
-				"text": "remainder.questions.calendar_1.text"
+				"text": "reminder.questions.calendar_1.text"
 			}
 		}
 	}

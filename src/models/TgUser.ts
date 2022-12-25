@@ -18,6 +18,55 @@ export default class TgUser extends Model {
     }
   }
 
+  public resetReminderOptions(): void {
+    this.data.reminder_options = {
+      repeat: false,
+      repeat_is_checked: false,
+      repeat_cycle: "",
+      repeat_pattern: "",
+      date: "",
+      checked_dates: [],
+      time: "",
+      beforehand_selected: false,
+      has_beforehand: "",
+      beforehand_time: "",
+    };
+  }
+
+  public async createNewUser(
+    tg_id: string | number,
+    name: string,
+    language: string,
+    tg_username: string = "",
+    surename: string = "",
+    phone_number: string = "",
+    active: boolean = false,
+    reminder_options: {} = {},
+    superuser: boolean = false,
+    last_active: Date = new Date(),
+    is_currently_doing: string = ""
+  ): Promise<ITgUser> {
+    const languages = ["en", "ru", "uz"];
+    if (!languages.includes(language)) {
+      language = "en";
+    }
+    const user_data = {
+      tg_id: tg_id.toString(),
+      name: name,
+      language: language,
+      tg_username: tg_username,
+      surename: surename,
+      phone_number: phone_number,
+      active: active,
+      reminder_options: reminder_options,
+      superuser: superuser,
+      last_active: last_active,
+      is_currently_doing: is_currently_doing,
+    };
+    this.data = await this.create(user_data);
+    return this.data;
+  }
+
   // the function to get the tg user by the telegram id
   // takes the telegram id
   // returns the tg user

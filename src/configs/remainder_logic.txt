@@ -1,8 +1,8 @@
-// this is logic for the remainder of the event
+// this is logic for the reminder of the event
 
-Is this remainder repeatable?: yes/no
+Is this reminder repeatable?: yes/no
 yes:
-    How should remainder repeat?: every year/month/days of week/daily
+    How should reminder repeat?: every year/month/days of week/daily
     year:
         "calendar" to choose the date
         send time/times separated with comma

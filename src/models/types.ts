@@ -9,13 +9,13 @@ type ITgUser = {
   phone_number: string;
   language: string;
   active: boolean;
-  remainder_options: RemainderOptions;
+  reminder_options: ReminderOptions;
   superuser: boolean;
   last_active: Date;
   is_currently_doing: string;
 };
 
-type RemainderOptions = {
+type ReminderOptions = {
   repeat: boolean;
   repeat_is_checked: boolean;
   repeat_cycle: string;
@@ -62,11 +62,11 @@ type IRepeatScheme = {
   interval_minutes: number;
 };
 
-type IRemainder = {
+type IReminder = {
   id: string | undefined;
   created: string | undefined;
   updated: string | undefined;
-  beforehand_remainder_owner_id: string;
+  beforehand_reminder_owner_id: string;
   name: string;
   group_id: string;
   user_id: string;
@@ -89,4 +89,4 @@ type IRemainder = {
 };
 
 // export all types
-export { ITgUser, IGroup, IGoal, IRepeatScheme, IRemainder, RemainderOptions };
+export { ITgUser, IGroup, IGoal, IRepeatScheme, IReminder, ReminderOptions };
