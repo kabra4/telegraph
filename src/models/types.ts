@@ -23,6 +23,7 @@ type ReminderOptions = {
   date: string;
   checked_dates: string[];
   time: string;
+  time_list: string[];
   beforehand_selected: boolean;
   has_beforehand: string;
   beforehand_time: string;

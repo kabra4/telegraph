@@ -27,6 +27,7 @@ export default class TgUser extends Model {
       date: "",
       checked_dates: [],
       time: "",
+      time_list: [],
       beforehand_selected: false,
       has_beforehand: "",
       beforehand_time: "",

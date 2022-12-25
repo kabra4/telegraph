@@ -62,10 +62,54 @@ export default class ReminderController {
     // receive "time" answer
     this.bot.hears(
       /^((0[0-9]|1[0-9]|2[0-3])[:\.]{1}[0-5][0-9])(,\s*(0[0-9]|1[0-9]|2[0-3])[:\.]{1}[0-5][0-9])*$/,
-      (ctx) => {
-        return; // TODO: implement
-      }
+      (ctx) => this.processTimeInput(ctx)
     );
+  }
+
+  // the function to process time message of the user
+  // takes the context of the message
+  // returns nothing
+  protected async processTimeInput(
+    ctx: NarrowedContext<
+      Context<Update> & {
+        match: RegExpExecArray;
+      },
+      {
+        message: Update.New & Update.NonChannel & Message.TextMessage;
+        update_id: number;
+      }
+    >
+  ) {
+    const user = new TgUser();
+    user.setByTgId(ctx.from.id).then(() => {
+      if (user.data.is_currently_doing !== "reminder.pattern.time") return;
+      user.data.is_currently_doing = "reminder.beforehand";
+      user.data.reminder_options.time_list = this.getTimesFromMessage(
+        ctx.message.text // "12:00, 13:00"
+      );
+      user.save().then(() => {
+        ls.setLocale(user.data.language);
+        ctx.reply(
+          ls.__("reminder.questions.has_it_beforehand.text"),
+          Markup.inlineKeyboard([
+            Markup.button.callback(
+              ls.__("reminder.questions.has_it_beforehand.options.yes"),
+              "rmdr.beforehand.yes"
+            ),
+            Markup.button.callback(
+              ls.__("reminder.questions.has_it_beforehand.options.no"),
+              "rmdr.beforehand.no"
+            ),
+          ])
+        );
+      });
+    });
+  }
+  // the function to get list of times from the message of the user
+  // takes the message of the user with regex match: /^((0[0-9]|1[0-9]|2[0-3])[:\.]{1}[0-5][0-9])(,\s*(0[0-9]|1[0-9]|2[0-3])[:\.]{1}[0-5][0-9])*$/;
+  // returns the list of times: string[]
+  protected getTimesFromMessage(message: string): string[] {
+    return message.split(",").map((time) => time.trim());
   }
 
   protected async test(ctx: Context<Update>) {
@@ -200,7 +244,7 @@ export default class ReminderController {
     }
 
     user.data.reminder_options.date = date;
-    user.data.is_currently_doing = "reminder.repeat.pattern.time";
+    user.data.is_currently_doing = "reminder.pattern.time";
     await user.save();
 
     // ask for time
