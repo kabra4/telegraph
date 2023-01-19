@@ -83,7 +83,6 @@ export default class CalendarMaker {
 
     // put month name in the first row
     keyboard.push([Markup.button.callback(monthName, dataIgnore)]);
-
     const weekDays =
       locale_ === "en"
         ? this._weekdays.en
@@ -155,7 +154,8 @@ export default class CalendarMaker {
   // returns a 4x3 grid of months type of Promise<Markup.Markup<InlineKeyboardMarkup>>
   public static async makeMonthGrid(
     locale_: string = "en",
-    year_: number = 0
+    year_: number = 0,
+    fast_select: string = "month"
   ): Promise<Markup.Markup<InlineKeyboardMarkup>> {
     const now = new Date();
     const year = year_ !== 0 ? year_ : now.getFullYear();
@@ -197,17 +197,35 @@ export default class CalendarMaker {
 
     // add navigation buttons
     const prevMonth = this.cbText("PREVmonth", year - 1, "00", "00", locale_);
-    const current_month_button = this.cbText(
-      "TODAYmonth",
-      now.getFullYear(),
-      (now.getMonth() + 1).toString().padStart(2, "0"),
-      "01",
-      locale_
-    );
+    let fast_select_cbtext = "";
+    // puts fast select button
+    if (fast_select === "month") {
+      fast_select_cbtext = this.cbText(
+        "TODAYmonth",
+        now.getFullYear(),
+        (now.getMonth() + 1).toString().padStart(2, "0"),
+        "01",
+        locale_
+      );
+    } else {
+      fast_select_cbtext = this.cbText(
+        "TODAY",
+        now.getFullYear(),
+        (now.getMonth() + 1).toString().padStart(2, "0"),
+        now.getDate(),
+        locale_
+      );
+    }
+    let fast_select_text =
+      fast_select === "month"
+        ? `- ${monthNames[now.getMonth()]} -`
+        : "- Today -";
     const nextMonth = this.cbText("NEXTmonth", year + 1, "00", "00", locale_);
+
+    // add navigation buttons
     keyboard.push([
       Markup.button.callback("<", prevMonth),
-      Markup.button.callback(monthNames[now.getMonth()], current_month_button),
+      Markup.button.callback(fast_select_text, fast_select_cbtext),
       Markup.button.callback(">", nextMonth),
     ]);
 
@@ -250,7 +268,9 @@ export default class CalendarMaker {
   public static getCalendarGrid(year: number, month: number): string[][] {
     const grid: any[] = [];
     // first day of the week is Monday
-    const firstDay = new Date(year, month - 1, 1).getDay() - 1;
+    let firstDay = new Date(year, month - 1, 1).getDay() - 1;
+    if (firstDay < 0) firstDay = 6;
+    // console.log("firstDay", firstDay);
     const daysInMonth = this.daysInMonth(month, year);
     let day = 1;
     for (let i = 0; i < 6; i++) {

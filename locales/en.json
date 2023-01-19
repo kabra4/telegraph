@@ -21,31 +21,31 @@
 		"language_has_not_changed": "Language has not changed"
 	},
 	"reminder": {
-        "calendar": {
-            "months": {
-                "january": "January",
-                "february": "February",
-                "march": "March",
-                "april": "April",
-                "may": "May",
-                "june": "June",
-                "july": "July",
-                "august": "August",
-                "september": "September",
-                "october": "October",
-                "november": "November",
-                "december": "December"
-            },
-            "weekdays": {
-                "monday": "Monday",
-                "tuesday": "Tuesday",
-                "wednesday": "Wednesday",
-                "thursday": "Thursday",
-                "friday": "Friday",
-                "saturday": "Saturday",
-                "sunday": "Sunday"
-            }
-        },
+		"calendar": {
+			"months": {
+				"january": "January",
+				"february": "February",
+				"march": "March",
+				"april": "April",
+				"may": "May",
+				"june": "June",
+				"july": "July",
+				"august": "August",
+				"september": "September",
+				"october": "October",
+				"november": "November",
+				"december": "December"
+			},
+			"weekdays": {
+				"monday": "Monday",
+				"tuesday": "Tuesday",
+				"wednesday": "Wednesday",
+				"thursday": "Thursday",
+				"friday": "Friday",
+				"saturday": "Saturday",
+				"sunday": "Sunday"
+			}
+		},
 		"questions": {
 			"start": {
 				"text": "Is remaider should be repeated?\nEvents like birthdays, anniversaries are repeated.",
@@ -67,7 +67,8 @@
 				"text": "Select the date of the reminder"
 			},
 			"send_time": {
-				"text": "Send the time of the reminder as HH:MM.\nExample: 12:00\nAlso you can send multiple times like this:\n12:00, 13:00, 14:00 (max 5 times)"
+				"multiple": "Send the time of the reminder as HH:MM.\nExample: 12:00 or 12.00\nAlso you can send multiple times like this:\n12:00, 13.00, 14.00 (max 5 times)",
+				"single": "Send the time of the reminder as HH:MM.\nExample: 12:00 or 12.00"
 			},
 			"send_reminder_name": {
 				"text": "Send the name of the reminder"
@@ -88,16 +89,16 @@
 			"select_beforehand_time": {
 				"text": "Select how much time before the event should the reminder be set",
 				"options": {
-					"1_hour": "1 hour",
-					"1_day": "1 day",
-					"2_days": "2 days",
-					"3_days": "3 days",
-					"1_week": "1 week",
-					"1_month": "1 month",
+					"1 hour": "1 hour",
+					"1 day": "1 day",
+					"2 days": "2 days",
+					"3 days": "3 days",
+					"1 week": "1 week",
+					"1 month": "1 month",
 					"custom": "Custom"
 				}
 			},
-			"send_beforehand_time": {
+			"custom_beforehand_time": {
 				"text": "Send the time before the event.\nExample: 5 days\nsupported time units: hours, days, weeks, months"
 			},
 			"calendar_month": {
@@ -113,6 +114,9 @@
 					"deselect_all": "Deselect all",
 					"next": "Next"
 				}
+			},
+			"time": {
+				"text": "reminder.questions.time.text"
 			}
 		},
 		"reminder_set": "Reminder was successfully set to %s",

@@ -29,7 +29,7 @@ export default class TgUser extends Model {
       time: "",
       time_list: [],
       beforehand_selected: false,
-      has_beforehand: "",
+      has_beforehand: false,
       beforehand_time: "",
     };
   }

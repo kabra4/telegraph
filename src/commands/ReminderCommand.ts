@@ -14,6 +14,14 @@ export default class ReminderController {
   // the bot
   private bot: Telegraf<Context<Update>>;
   private repeat_cycles: string[] = ["daily", "weekly", "monthly", "yearly"];
+  private beforehand_options: string[] = [
+    "1 hour",
+    "1 day",
+    "3 days",
+    "1 week",
+    "1 month",
+    "custom",
+  ];
 
   // the constructor of the reminder controller
   // takes the bot
@@ -23,7 +31,7 @@ export default class ReminderController {
 
     // receive "repeat" answer
     this.bot.action("rmdr.repeat.yes", (ctx) => this.AskRepeatCycle(ctx));
-    // this.bot.action("rmdr.repeat.no", (ctx) => this.reminderRepeatNo(ctx));
+    this.bot.action("rmdr.repeat.no", (ctx) => this.processRepeatNo(ctx));
 
     // receive "repeat cycle" answer
     this.repeat_cycles.forEach((cycle) => {
@@ -64,6 +72,108 @@ export default class ReminderController {
       /^((0[0-9]|1[0-9]|2[0-3])[:\.]{1}[0-5][0-9])(,\s*(0[0-9]|1[0-9]|2[0-3])[:\.]{1}[0-5][0-9])*$/,
       (ctx) => this.processTimeInput(ctx)
     );
+
+    // receive "beforehand" answer
+    this.bot.action("rmdr.beforehand.yes", (ctx) =>
+      this.processBeforehand(ctx, true)
+    );
+    this.bot.action("rmdr.beforehand.no", (ctx) =>
+      this.processBeforehand(ctx, false)
+    );
+
+    // receive "beforehand time" answer
+    this.beforehand_options.forEach((option) => {
+      this.bot.action(
+        "reminder.questions.select_beforehand_time.options." + option,
+        (ctx) => this.processBeforehandTimeButtonInput(ctx, option)
+      );
+    });
+  }
+
+  // the function to process the "beforehand" answer
+  // takes the context of the message
+  // returns nothing
+  protected async processBeforehand(
+    ctx: NarrowedContext<
+      Context<Update> & { match: RegExpExecArray },
+      Update.CallbackQueryUpdate<CallbackQuery>
+    >,
+    beforehand: boolean
+  ) {
+    if (ctx.from) {
+      const user = new TgUser();
+      user.setByTgId(ctx.from.id).then(() => {
+        if (user.data.is_currently_doing !== "reminder.beforehand") return;
+
+        if (beforehand) {
+          // if user answered "yes" to "beforehand" question
+          user.data.is_currently_doing = "reminder.beforehand_time";
+          user.save().then(() => {
+            ls.setLocale(user.data.language);
+            ctx.reply(
+              ls.__("reminder.questions.select_beforehand_time.text"),
+              Markup.inlineKeyboard([
+                this.beforehand_options.map((option) =>
+                  Markup.button.callback(
+                    ls.__(
+                      "reminder.questions.select_beforehand_time.options." +
+                        option
+                    ),
+                    "reminder.questions.select_beforehand_time.options." +
+                      option
+                  )
+                ),
+              ])
+            );
+          });
+        } else {
+          // if user answered "no" to "beforehand" question
+          user.data.is_currently_doing = "none";
+          user.data.reminder_options.has_beforehand = beforehand;
+          user.data.reminder_options.beforehand_selected = true;
+          user.save().then(() => {
+            this.saveReminder(user);
+            ctx.reply("Reminder saved!");
+          });
+        }
+      });
+    }
+  }
+
+  private saveReminder(user: TgUser) {}
+
+  private async processBeforehandTimeButtonInput(
+    ctx: NarrowedContext<
+      Context<Update> & {
+        // takes the bot
+        match: RegExpExecArray;
+      },
+      Update.CallbackQueryUpdate<CallbackQuery>
+    >,
+    option: string
+  ) {
+    const user = new TgUser();
+    if (!ctx.from) return;
+
+    user.setByTgId(ctx.from.id).then(() => {
+      if (user.data.is_currently_doing !== "reminder.beforehand_time") return;
+
+      if (option === "custom") {
+        user.data.is_currently_doing = "reminder.beforehand_time.custom";
+        user.save().then(() => {
+          ls.setLocale(user.data.language);
+          ctx.reply(ls.__("reminder.questions.custom_beforehand_time.text"));
+        });
+      } else {
+        let time = 0; // time in minutes
+        if (option === "1 ") time = 1; // TODO: fix this
+        user.data.is_currently_doing = "none";
+        user.data.reminder_options.has_beforehand = true;
+        user.data.reminder_options.beforehand_selected = true;
+        // user.data.reminder_options.beforehand_time = time;
+        user.save().then(() => {});
+      }
+    });
   }
 
   // the function to process time message of the user
@@ -192,6 +302,32 @@ export default class ReminderController {
     );
   }
 
+  // the fn if repeat is no
+  private async processRepeatNo(
+    ctx: NarrowedContext<
+      Context<Update> & { match: RegExpExecArray },
+      Update.CallbackQueryUpdate<CallbackQuery>
+    >
+  ) {
+    const user = new TgUser();
+    await user.setByTgId(ctx.callbackQuery.from.id);
+
+    if (user.data.is_currently_doing !== "reminder") return;
+
+    user.data.reminder_options.repeat = false;
+    user.data.reminder_options.repeat_is_checked = true;
+    user.data.is_currently_doing = "reminder.pattern.time";
+    user.save();
+
+    const locale_ = user.data.language;
+    const current_year = new Date().getFullYear();
+    ls.setLocale(locale_);
+    ctx.editMessageText(
+      ls.__("reminder.questions.calendar_1"),
+      await CalendarMaker.makeMonthGrid(locale_, current_year, "day")
+    );
+  }
+
   // the function to process the repeat cycle input
   // takes the context of the bot
   public async processRepeatCycleInput(
@@ -216,7 +352,6 @@ export default class ReminderController {
       ctx.editMessageText(
         ls.__("reminder.questions.calendar_1.text"),
         await CalendarMaker.makeMonthGrid(user.data.language)
-        // await CalendarMaker.makeCalendar(user.data.language)
       );
     }
   }
@@ -249,7 +384,11 @@ export default class ReminderController {
 
     // ask for time
     ls.setLocale(user.data.language);
-    ctx.editMessageText(ls.__("reminder.questions.send_time.text"));
+    if (user.data.reminder_options.repeat) {
+      ctx.editMessageText(ls.__("reminder.questions.send_time.single"));
+    } else {
+      ctx.editMessageText(ls.__("reminder.questions.send_time.multiple"));
+    }
   }
 
   // the function to process the "calendar" navigation
@@ -281,49 +420,84 @@ export default class ReminderController {
 
     ls.setLocale(user.data.language);
     if (navigation === "prev") {
-      let year = Number(date.split("-")[0]);
-      let month = Number(date.split("-")[1]);
-      if (month === 0 && !query.includes("month")) {
-        year--;
-        month = 12;
-      }
-      const calendar = query.includes("month")
-        ? await CalendarMaker.makeMonthGrid(user.data.language, year)
-        : query.includes("weekdays")
-        ? await CalendarMaker.makeCalendar(user.data.language, year, month) // TODO: fix this
-        : await CalendarMaker.makeCalendar(user.data.language, year, month);
-
-      ctx.editMessageText(
-        ls.__("reminder.questions.calendar_1.text"),
-        calendar
-      );
+      this.processCalendarNavigationPrev(ctx, user, query, date);
     } else if (navigation === "next") {
-      let year = Number(date.split("-")[0]);
-      let month = Number(date.split("-")[1]);
+      this.processCalendarNavigationNext(ctx, user, query, date);
+    } else if (navigation === "today") {
+      // if "TODAY"
 
-      if (month === 13 && !query.includes("month")) {
-        year++;
-        month = 1;
+      user.data.reminder_options.date = date;
+      user.save();
+
+      if (user.data.reminder_options.repeat) {
+        ctx.editMessageText(
+          ls.__("reminder.questions.calendar_1.text"),
+          await CalendarMaker.makeCalendar(user.data.language)
+        );
+      } else {
+        // no repeat
+        ctx.editMessageText(ls.__("reminder.questions.send_time.multiple"));
       }
-      const calendar = query.includes("month")
-        ? await CalendarMaker.makeMonthGrid(user.data.language, year)
-        : query.includes("weekdays")
-        ? await CalendarMaker.makeCalendar(user.data.language, year, month) // TODO: fix this
-        : await CalendarMaker.makeCalendar(user.data.language, year, month);
-      ctx.editMessageText(
-        ls.__("reminder.questions.calendar_1.text"),
-        calendar
-      );
-    } else {
-      ctx.editMessageText(
-        ls.__("reminder.questions.calendar_1.text"),
-        await CalendarMaker.makeCalendar(user.data.language)
-      );
     }
+  }
+
+  public async processCalendarNavigationNext(
+    ctx: NarrowedContext<
+      Context<Update> & {
+        match: RegExpExecArray;
+      },
+      Update.CallbackQueryUpdate<CallbackQuery>
+    >,
+    user: TgUser,
+    query: string,
+    date: string
+  ) {
+    let year = Number(date.split("-")[0]);
+    let month = Number(date.split("-")[1]);
+
+    if (month === 13 && !query.includes("month")) {
+      year++;
+      month = 1;
+    }
+    const calendar = query.includes("month")
+      ? await CalendarMaker.makeMonthGrid(user.data.language, year)
+      : query.includes("weekdays")
+      ? await CalendarMaker.makeCalendar(user.data.language, year, month) // TODO: fix this
+      : await CalendarMaker.makeCalendar(user.data.language, year, month);
+    ls.setLocale(user.data.language);
+    ctx.editMessageText(ls.__("reminder.questions.calendar_1.text"), calendar);
+  }
+
+  public async processCalendarNavigationPrev(
+    ctx: NarrowedContext<
+      Context<Update> & {
+        match: RegExpExecArray;
+      },
+      Update.CallbackQueryUpdate<CallbackQuery>
+    >,
+    user: TgUser,
+    query: string,
+    date: string
+  ) {
+    let year = Number(date.split("-")[0]);
+    let month = Number(date.split("-")[1]);
+    if (month === 0 && !query.includes("month")) {
+      year--;
+      month = 12;
+    }
+    const calendar = query.includes("month")
+      ? await CalendarMaker.makeMonthGrid(user.data.language, year)
+      : query.includes("weekdays")
+      ? await CalendarMaker.makeCalendar(user.data.language, year, month) // TODO: fix this
+      : await CalendarMaker.makeCalendar(user.data.language, year, month);
+
+    ls.setLocale(user.data.language);
+    ctx.editMessageText(ls.__("reminder.questions.calendar_1.text"), calendar);
   }
 
   // the function to process month input
   // takes the context of the bot
+  // runs when the user clicks on a month in the month grid
   public async processMonthCalendar(
     ctx: NarrowedContext<
       Context<Update> & {
