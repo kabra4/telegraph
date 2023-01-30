@@ -1,11 +1,18 @@
 import { Context, Markup, NarrowedContext, Telegraf } from "telegraf";
-import { InlineKeyboardMarkup } from "telegraf/typings/core/types/typegram";
+import {
+  InlineKeyboardButton,
+  InlineKeyboardMarkup,
+} from "telegraf/typings/core/types/typegram";
 import { CallbackQuery, Message, Update } from "typegram";
 // import Calendar from "@enigmaoffline/calendarjs";
 
 // import dotenv from "dotenv";
 import { LocaleService } from "../helpers/LocaleService";
 import TgUser from "../models/TgUser";
+import { lstat } from "fs";
+import { inlineKeyboard } from "telegraf/typings/markup";
+
+const ls = LocaleService.Instance;
 
 export default class CalendarMaker {
   // the bot
@@ -120,7 +127,7 @@ export default class CalendarMaker {
 
     // add navigation buttons
     const prevMonth = this.cbText(
-      "PREV",
+      "PREVmonth",
       year,
       (month - 1).toString().padStart(2, "0"),
       "00",
@@ -134,7 +141,7 @@ export default class CalendarMaker {
       locale_
     );
     const nextMonth = this.cbText(
-      "NEXT",
+      "NEXTmonth",
       year,
       (month + 1).toString().padStart(2, "0"),
       "00",
@@ -152,7 +159,7 @@ export default class CalendarMaker {
   // function to create 4x3 grid of months
   // gets the year as a parameter
   // returns a 4x3 grid of months type of Promise<Markup.Markup<InlineKeyboardMarkup>>
-  public static async makeMonthGrid(
+  public static async makeMonthsGrid(
     locale_: string = "en",
     year_: number = 0,
     fast_select: string = "month"
@@ -196,7 +203,7 @@ export default class CalendarMaker {
     });
 
     // add navigation buttons
-    const prevMonth = this.cbText("PREVmonth", year - 1, "00", "00", locale_);
+    const prevMonth = this.cbText("PREVyear", year - 1, "00", "00", locale_);
     let fast_select_cbtext = "";
     // puts fast select button
     if (fast_select === "month") {
@@ -220,7 +227,7 @@ export default class CalendarMaker {
       fast_select === "month"
         ? `- ${monthNames[now.getMonth()]} -`
         : "- Today -";
-    const nextMonth = this.cbText("NEXTmonth", year + 1, "00", "00", locale_);
+    const nextMonth = this.cbText("NEXTyear", year + 1, "00", "00", locale_);
 
     // add navigation buttons
     keyboard.push([
@@ -294,6 +301,96 @@ export default class CalendarMaker {
       grid.push(week);
     }
     return grid;
+  }
+
+  // function to create weekdays row
+  public static async weekdaysMarkup(
+    locale_: string = "en",
+    checked_dates: string[] = []
+  ): Promise<Markup.Markup<InlineKeyboardMarkup>> {
+    let keyboard: any[] = [];
+    const weekdays =
+      locale_ === "en"
+        ? this._weekdays.en
+        : locale_ === "ru"
+        ? this._weekdays.ru
+        : this._weekdays.uz;
+
+    ls.setLocale(locale_);
+    keyboard.push([
+      Markup.button.callback(
+        ls.__("reminder.calendar.weeklyCalendar.title"),
+        "IGNORE"
+      ),
+    ]);
+    keyboard.push(
+      weekdays.map((day) => {
+        if (checked_dates.includes(day)) {
+          const text = `✅ ${day}`;
+          const callback_text = `calendarWeekdays|CHECKED|${day}|${locale_}`;
+          return Markup.button.callback(text, callback_text);
+        } else {
+          const text = day;
+          const callback_text = `calendarWeekdays|UNCHECKED|${day}|${locale_}`;
+          return Markup.button.callback(text, callback_text);
+        }
+      })
+    );
+    if (checked_dates.length > 0) {
+      keyboard.push([
+        Markup.button.callback(
+          ls.__("buttons.next"),
+          `calendarWeekdays|NEXT|${locale_}`
+        ),
+      ]);
+    }
+    return Markup.inlineKeyboard(keyboard);
+    // return InlineKeyboardMarkup(keyboard)
+  }
+
+  public static async weekdaysKeyboard(
+    locale_: string = "en",
+    checked_dates: string[] = []
+  ): Promise<InlineKeyboardMarkup | Markup.Markup<InlineKeyboardMarkup>> {
+    let keyboard: InlineKeyboardButton[][] = [];
+    const weekdays =
+      locale_ === "en"
+        ? this._weekdays.en
+        : locale_ === "ru"
+        ? this._weekdays.ru
+        : this._weekdays.uz;
+
+    ls.setLocale(locale_);
+    keyboard.push([
+      Markup.button.callback(
+        ls.__("reminder.calendar.weeklyCalendar.title"),
+        "IGNORE"
+      ),
+    ]);
+    keyboard.push(
+      weekdays.map((day) => {
+        if (checked_dates.includes(day)) {
+          const text = `✅ ${day}`;
+          const callback_text = `calendarWeekdays|CHECKED|${day}|${locale_}`;
+          return Markup.button.callback(text, callback_text);
+        } else {
+          const text = day;
+          const callback_text = `calendarWeekdays|UNCHECKED|${day}|${locale_}`;
+          return Markup.button.callback(text, callback_text);
+          // return;
+        }
+      })
+    );
+    if (checked_dates.length > 0) {
+      keyboard.push([
+        Markup.button.callback(
+          ls.__("buttons.next"),
+          `calendarWeekdays|NEXT|${locale_}`
+        ),
+      ]);
+    }
+    return Markup.inlineKeyboard(keyboard).extra();
+    // return InlineKeyboardMarkup(keyboard)
   }
 
   private static daysInMonth(month: number, year: number) {

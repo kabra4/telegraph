@@ -20,6 +20,17 @@
 		"language_changed": "Language changed to English",
 		"language_has_not_changed": "Language has not changed"
 	},
+	"buttons": {
+		"done": "Done",
+		"next": "Next",
+		"back": "Back",
+		"cancel": "Cancel",
+		"skip": "Skip",
+		"yes": "Yes",
+		"no": "No",
+		"select_all": "Select all",
+		"deselect_all": "Deselect all"
+	},
 	"reminder": {
 		"calendar": {
 			"months": {
@@ -44,6 +55,9 @@
 				"friday": "Friday",
 				"saturday": "Saturday",
 				"sunday": "Sunday"
+			},
+			"weeklyCalendar": {
+				"title": "Weekly calendar"
 			}
 		},
 		"questions": {
@@ -61,13 +75,16 @@
 					"weekly": "Weekly",
 					"monthly": "Monthly",
 					"yearly": "Yearly"
+				},
+				"weekly": {
+					"text": "Select day/days of the week"
 				}
 			},
 			"calendar_1": {
 				"text": "Select the date of the reminder"
 			},
 			"send_time": {
-				"multiple": "Send the time of the reminder as HH:MM.\nExample: 12:00 or 12.00\nAlso you can send multiple times like this:\n12:00, 13.00, 14.00 (max 5 times)",
+				"multiple": "Send the time of the reminder as HH:MM.\nExample: 12:00 or 12.00\n\nAlso you can send multiple times like this:\n12:00, 13.00, 14.00 (max 5 times)",
 				"single": "Send the time of the reminder as HH:MM.\nExample: 12:00 or 12.00"
 			},
 			"send_reminder_name": {
@@ -89,12 +106,15 @@
 			"select_beforehand_time": {
 				"text": "Select how much time before the event should the reminder be set",
 				"options": {
+					"10 minutes": "10 minutes",
+					"30 minutes": "30 minutes",
 					"1 hour": "1 hour",
 					"1 day": "1 day",
 					"2 days": "2 days",
 					"3 days": "3 days",
 					"1 week": "1 week",
 					"1 month": "1 month",
+					"7 days": "7 days",
 					"custom": "Custom"
 				}
 			},

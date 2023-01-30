@@ -8,7 +8,7 @@
     "node": ">=18.0"
   },
   "scripts": {
-    "test": "test",
+    "test": "tsc -w && pocketbase serve",
     "build": "tsc --build --clean",
     "ts-watch": "tsc -w",
     "pocketbase": "pocketbase serve",
@@ -39,6 +39,7 @@
     "typescript": "^4.9.4"
   },
   "dependencies": {
+    "concurrently": "^7.6.0",
     "dotenv": "^16.0.3",
     "i18n": "^0.15.1",
     "pocketbase": "^0.9.0",

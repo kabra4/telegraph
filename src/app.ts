@@ -9,6 +9,8 @@ import BasicCommandController from "./controllers/CommandsController";
 import LanguageCommand from "./commands/LanguageCommand";
 import ReminderCommand from "./commands/ReminderCommand";
 import CalendarMaker from "./helpers/CalendarMaker";
+import "./helpers/TimeParser";
+import TimeParser from "./helpers/TimeParser";
 
 dotenv.config();
 const ls = new LocaleService(i18n);
@@ -31,6 +33,12 @@ const commandController = new BasicCommandController(bot);
 const languageCommand = new LanguageCommand(bot);
 const reminderCommand = new ReminderCommand(bot);
 
+console.log("Bot started");
+console
+  .log
+  // TimeParser.calculateClosestDateTime("2021-10-10", ["12:00", "13:00"], true)
+  ();
+
 // const chatId: string = process.env.CHAT_ID as string;
 
 // const actionController = new ActionController(bot);
@@ -50,9 +58,13 @@ bot.command("quit", (ctx) => {
 });
 
 bot.command("test", (ctx) => {
-  new TgUser()
-    .getByTgId(ctx.from.id)
-    .then((res) => ctx.reply("Your id is " + JSON.stringify(res.id)));
+  // new TgUser()
+  //   .getByTgId(ctx.from.id)
+  //   .then((res) => ctx.reply("Your id is " + JSON.stringify(res.id)));
+  console
+    .log
+    // TimeParser.calculateClosestDateTime("2023-10-10", ["12:00", "13:00"], false)
+    ();
   // const users = new TgUser().getAll().then((res) => {
   //   console.log(res);
   //   ctx.reply("All users: " + JSON.stringify(res));
