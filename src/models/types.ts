@@ -1,3 +1,6 @@
+import { Context, Markup, NarrowedContext, Telegraf } from "telegraf";
+import { CallbackQuery, Message, Update } from "typegram";
+
 type ITgUser = {
   id: string | undefined;
   created: string | undefined;
@@ -89,5 +92,44 @@ type IReminder = {
   content: string;
 };
 
+type commandCtx = NarrowedContext<
+  Context<Update>,
+  {
+    message: Update.New & Update.NonChannel & Message.TextMessage;
+    update_id: number;
+  }
+>;
+
+type actionCtx = NarrowedContext<
+  Context<Update> & { match: RegExpExecArray },
+  Update.CallbackQueryUpdate<CallbackQuery>
+>;
+
+type hearsCtx = NarrowedContext<
+  Context<Update>,
+  Update.MessageUpdate & Update.NonChannel & Message.TextMessage
+>;
+
+type hearsRegexCtx = NarrowedContext<
+  Context<Update> & {
+    match: RegExpExecArray;
+  },
+  {
+    message: Update.New & Update.NonChannel & Message.TextMessage;
+    update_id: number;
+  }
+>;
+
 // export all types
-export { ITgUser, IGroup, IGoal, IRepeatScheme, IReminder, ReminderOptions };
+export {
+  ITgUser,
+  IGroup,
+  IGoal,
+  IRepeatScheme,
+  IReminder,
+  ReminderOptions,
+  commandCtx,
+  actionCtx,
+  hearsCtx,
+  hearsRegexCtx,
+};

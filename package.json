@@ -11,9 +11,10 @@
     "test": "tsc -w && pocketbase serve",
     "build": "tsc --build --clean",
     "ts-watch": "tsc -w",
-    "pocketbase": "pocketbase serve",
+    "pocketbase": "",
     "nodemon": "nodemon --experimental-specifier-resolution=node dist/app.js",
-    "start": "node --experimental-specifier-resolution=node dist/app.js"
+    "start": "concurrently \"pocketbase serve\" \"node --experimental-specifier-resolution=node dist/app.js\"",
+    "dev": "concurrently \"tsc -w\" \"pocketbase serve\" \"nodemon --experimental-specifier-resolution=node dist/app.js\""
   },
   "repository": {
     "type": "git",

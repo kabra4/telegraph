@@ -316,31 +316,27 @@ export default class CalendarMaker {
         ? this._weekdays.ru
         : this._weekdays.uz;
 
-    ls.setLocale(locale_);
-    keyboard.push([
-      Markup.button.callback(
-        ls.__("reminder.calendar.weeklyCalendar.title"),
-        "IGNORE"
-      ),
-    ]);
     keyboard.push(
       weekdays.map((day) => {
-        if (checked_dates.includes(day)) {
+        let i = weekdays.indexOf(day);
+        // check if day is checked
+        if (checked_dates.includes(i.toString())) {
           const text = `✅ ${day}`;
-          const callback_text = `calendarWeekdays|CHECKED|${day}|${locale_}`;
+          const callback_text = `calendarWeekdays|CHECKED|${i}`;
           return Markup.button.callback(text, callback_text);
         } else {
           const text = day;
-          const callback_text = `calendarWeekdays|UNCHECKED|${day}|${locale_}`;
+          const callback_text = `calendarWeekdays|UNCHECKED|${i}`;
           return Markup.button.callback(text, callback_text);
         }
       })
     );
     if (checked_dates.length > 0) {
+      ls.setLocale(locale_);
       keyboard.push([
         Markup.button.callback(
           ls.__("buttons.next"),
-          `calendarWeekdays|NEXT|${locale_}`
+          `calendarWeekdays|FINISH|${locale_}`
         ),
       ]);
     }
@@ -348,52 +344,106 @@ export default class CalendarMaker {
     // return InlineKeyboardMarkup(keyboard)
   }
 
-  public static async weekdaysKeyboard(
+  // public static async weekdaysKeyboard(
+  //   locale_: string = "en",
+  //   checked_dates: string[] = []
+  // ): Promise<InlineKeyboardMarkup | Markup.Markup<InlineKeyboardMarkup>> {
+  //   let keyboard: InlineKeyboardButton[][] = [];
+  //   const weekdays =
+  //     locale_ === "en"
+  //       ? this._weekdays.en
+  //       : locale_ === "ru"
+  //       ? this._weekdays.ru
+  //       : this._weekdays.uz;
+
+  //   ls.setLocale(locale_);
+  //   keyboard.push([
+  //     Markup.button.callback(
+  //       ls.__("reminder.calendar.weeklyCalendar.title"),
+  //       "IGNORE"
+  //     ),
+  //   ]);
+  //   keyboard.push(
+  //     weekdays.map((day) => {
+  //       if (checked_dates.includes(day)) {
+  //         const text = `✅ ${day}`;
+  //         const callback_text = `calendarWeekdays|CHECKED|${day}|${locale_}`;
+  //         return Markup.button.callback(text, callback_text);
+  //       } else {
+  //         const text = day;
+  //         const callback_text = `calendarWeekdays|UNCHECKED|${day}|${locale_}`;
+  //         return Markup.button.callback(text, callback_text);
+  //         // return;
+  //       }
+  //     })
+  //   );
+  //   if (checked_dates.length > 0) {
+  //     keyboard.push([
+  //       Markup.button.callback(
+  //         ls.__("buttons.next"),
+  //         `calendarWeekdays|NEXT|${locale_}`
+  //       ),
+  //     ]);
+  //   }
+  //   return Markup.inlineKeyboard(keyboard);
+  //   // return InlineKeyboardMarkup(keyboard)
+  // }
+
+  private static daysInMonth(month: number, year: number) {
+    return new Date(year, month, 0).getDate();
+  }
+
+  public static async multiselectCalendar(
     locale_: string = "en",
     checked_dates: string[] = []
-  ): Promise<InlineKeyboardMarkup | Markup.Markup<InlineKeyboardMarkup>> {
-    let keyboard: InlineKeyboardButton[][] = [];
-    const weekdays =
-      locale_ === "en"
-        ? this._weekdays.en
-        : locale_ === "ru"
-        ? this._weekdays.ru
-        : this._weekdays.uz;
+  ) {
+    const grid = this.get31DayGrid();
+    let keyboard: any[] = [];
 
-    ls.setLocale(locale_);
-    keyboard.push([
-      Markup.button.callback(
-        ls.__("reminder.calendar.weeklyCalendar.title"),
-        "IGNORE"
-      ),
-    ]);
-    keyboard.push(
-      weekdays.map((day) => {
-        if (checked_dates.includes(day)) {
-          const text = `✅ ${day}`;
-          const callback_text = `calendarWeekdays|CHECKED|${day}|${locale_}`;
-          return Markup.button.callback(text, callback_text);
-        } else {
-          const text = day;
-          const callback_text = `calendarWeekdays|UNCHECKED|${day}|${locale_}`;
-          return Markup.button.callback(text, callback_text);
-          // return;
-        }
-      })
-    );
+    for (let i = 0; i < grid.length; i++) {
+      const week = grid[i];
+      keyboard.push(
+        week.map((day) => {
+          if (checked_dates.includes(day.toString())) {
+            const text = `✅ ${day}`;
+            const callback_text = `calendarMultiselect|CHECKED|${day}`;
+            return Markup.button.callback(text, callback_text);
+          } else {
+            const text = day.toString();
+            const callback_text = `calendarMultiselect|UNCHECKED|${day}`;
+            return Markup.button.callback(text, callback_text);
+          }
+        })
+      );
+    }
+
     if (checked_dates.length > 0) {
       keyboard.push([
         Markup.button.callback(
           ls.__("buttons.next"),
-          `calendarWeekdays|NEXT|${locale_}`
+          `calendarMultiselect|FINISH|${locale_}`
         ),
       ]);
     }
-    return Markup.inlineKeyboard(keyboard).extra();
-    // return InlineKeyboardMarkup(keyboard)
+
+    return Markup.inlineKeyboard(keyboard);
   }
 
-  private static daysInMonth(month: number, year: number) {
-    return new Date(year, month, 0).getDate();
+  private static get31DayGrid(): number[][] {
+    const grid: any[] = [];
+    let day = 1;
+    for (let i = 0; i < 6; i++) {
+      const week: any[] = [];
+      for (let j = 0; j < 7; j++) {
+        if (day > 31) {
+          break;
+        } else {
+          week.push(day);
+          day++;
+        }
+      }
+      grid.push(week);
+    }
+    return grid;
   }
 }

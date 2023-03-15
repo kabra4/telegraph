@@ -62,7 +62,7 @@
 		},
 		"questions": {
 			"start": {
-				"text": "Is remaider should be repeated?\nEvents like birthdays, anniversaries are repeated.",
+				"text": "Is remaider should be *repeated*?\nEvents like birthdays, anniversaries are repeated\\.",
 				"options": {
 					"yes": "Yes",
 					"no": "No"
@@ -78,14 +78,20 @@
 				},
 				"weekly": {
 					"text": "Select day/days of the week"
+				},
+				"monthly": {
+					"text": "Select day/days of the month"
+				},
+				"daily": {
+					"text": "Send the time of the reminder as *HH:MM*\\.\nExample: 12:00 or 12\\.00"
 				}
 			},
 			"calendar_1": {
 				"text": "Select the date of the reminder"
 			},
 			"send_time": {
-				"multiple": "Send the time of the reminder as HH:MM.\nExample: 12:00 or 12.00\n\nAlso you can send multiple times like this:\n12:00, 13.00, 14.00 (max 5 times)",
-				"single": "Send the time of the reminder as HH:MM.\nExample: 12:00 or 12.00"
+				"multiple": "Send the time of the reminder as *HH:MM*\\.\nExample: 12:00 or 12\\.00",
+				"single": "Send the time of the reminder as *HH:MM*\\.\nExample: 12:00 or 12\\.00"
 			},
 			"send_reminder_name": {
 				"text": "Send the name of the reminder"
@@ -104,7 +110,7 @@
 				}
 			},
 			"select_beforehand_time": {
-				"text": "Select how much time before the event should the reminder be set",
+				"text": "Select how much time before the event should the reminder be set or send the time before the event.\nExample: 5 days\nsupported time units: minutes, hours, days, weeks",
 				"options": {
 					"10 minutes": "10 minutes",
 					"30 minutes": "30 minutes",
@@ -137,6 +143,9 @@
 			},
 			"time": {
 				"text": "reminder.questions.time.text"
+			},
+			"multiselect_calendar": {
+				"text": "reminder.questions.multiselect_calendar.text"
 			}
 		},
 		"reminder_set": "Reminder was successfully set to %s",
