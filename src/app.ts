@@ -9,8 +9,8 @@ import BasicCommandController from "./controllers/CommandsController";
 import LanguageCommand from "./commands/LanguageCommand";
 import ReminderCommand from "./commands/ReminderCommand";
 import CalendarMaker from "./helpers/CalendarMaker";
-import "./helpers/TimeParser";
-import TimeParser from "./helpers/TimeParser";
+import "./helpers/TimeFunctions";
+import TimeFunctions from "./helpers/TimeFunctions";
 
 dotenv.config();
 const ls = new LocaleService(i18n);
