@@ -1,7 +1,7 @@
 import { Context, Markup, NarrowedContext, Telegraf } from "telegraf";
 import { CallbackQuery, Message, Update } from "typegram";
 
-type ITgUser = {
+type TgUserData = {
   id: string | undefined;
   created: string | undefined;
   updated: string | undefined;
@@ -19,12 +19,13 @@ type ITgUser = {
 };
 
 type ReminderOptions = {
+  name: string;
   repeat: boolean;
   repeat_is_checked: boolean;
   repeat_cycle: string;
   repeat_pattern: string;
   date: string;
-  checked_dates: string[];
+  checked_days: string[];
   time: string;
   time_list: string[];
   beforehand_selected: boolean;
@@ -32,7 +33,7 @@ type ReminderOptions = {
   beforehand_time: string;
 };
 
-type IGroup = {
+type GroupData = {
   id: string | undefined;
   created: string | undefined;
   updated: string | undefined;
@@ -43,7 +44,7 @@ type IGroup = {
   language: string;
 };
 
-type IGoal = {
+type GoalData = {
   id: string | undefined;
   created: string | undefined;
   updated: string | undefined;
@@ -55,7 +56,7 @@ type IGoal = {
   user_id: string;
 };
 
-type IRepeatScheme = {
+type RepeatSchemeData = {
   id: string | undefined;
   created: string | undefined;
   updated: string | undefined;
@@ -66,7 +67,7 @@ type IRepeatScheme = {
   interval_minutes: number;
 };
 
-type IReminder = {
+type ReminderData = {
   id: string | undefined;
   created: string | undefined;
   updated: string | undefined;
@@ -122,11 +123,11 @@ type hearsRegexCtx = NarrowedContext<
 
 // export all types
 export {
-  ITgUser,
-  IGroup,
-  IGoal,
-  IRepeatScheme,
-  IReminder,
+  TgUserData,
+  GroupData,
+  GoalData,
+  RepeatSchemeData,
+  ReminderData,
   ReminderOptions,
   commandCtx,
   actionCtx,

@@ -59,7 +59,7 @@ bot.command("quit", (ctx) => {
 
 bot.command("test", (ctx) => {
   // new TgUser()
-  //   .getByTgId(ctx.from.id)
+  //   .getDataByTgId(ctx.from.id)
   //   .then((res) => ctx.reply("Your id is " + JSON.stringify(res.id)));
   console
     .log
@@ -70,7 +70,7 @@ bot.command("test", (ctx) => {
   //   ctx.reply("All users: " + JSON.stringify(res));
   // });
   // console.log(users);
-  // const user = new TgUser().getByTgId(ctx.from.id).then((res) => {
+  // const user = new TgUser().getDataByTgId(ctx.from.id).then((res) => {
   //   ctx.reply("Your id is " + JSON.stringify(res));
   // });
 });

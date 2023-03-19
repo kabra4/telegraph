@@ -2,6 +2,94 @@
 //
 
 export default class TimeFunctions {
+  private static timelabels: { [key: string]: string[] } = {
+    minute: [
+      "minute",
+      "min",
+      "m",
+      "minutes",
+      "mins", // english
+      "minutlar",
+      "minut",
+      "daqiqa", // uzbek
+      "мин",
+      "минут",
+      "минуты",
+      "минута",
+      "минуту",
+      "минуты",
+      "минутам",
+      "минутами",
+      "минутах", // russian
+    ],
+    hour: [
+      "hour",
+      "h",
+      "hours",
+      "hrs", // english
+      "soat",
+      "soatlar", // uzbek
+      "час",
+      "часа",
+      "часов",
+      "часу",
+      "часом",
+      "часе", // russian
+    ],
+    day: [
+      "day",
+      "d",
+      "days", // english
+      "kun",
+      "kunlar", // uzbek
+      "день",
+      "дня",
+      "дней",
+      "дню",
+      "днем",
+      "дне", // russian
+    ],
+    week: [
+      "week",
+      "w",
+      "weeks", // english
+      "hafta",
+      "haftalar", // uzbek
+      "неделя",
+      "недели",
+      "недель",
+      "неделю",
+      "неделей",
+      "неделе", // russian
+    ],
+    month: [
+      "month",
+      "months",
+      "mon", // english
+      "oy",
+      "oylar", // uzbek
+      "месяц",
+      "месяца",
+      "месяцев",
+      "месяцу",
+      "месяцем",
+      "месяце", // russian
+    ],
+  };
+
+  private static timelabelFromUnit(unit: string): string {
+    // loop through the timelabels
+    for (const key in this.timelabels) {
+      // if the unit is in the timelabels
+      if (this.timelabels[key].includes(unit)) {
+        // return the key
+        return key;
+      }
+    }
+    // if the unit is not in the timelabels
+    return "";
+  }
+
   // the function to parse the time string
   // takes the time string
   public static parse(time: string): Date {
@@ -40,33 +128,35 @@ export default class TimeFunctions {
     const number = parseInt(timeSplit[0]);
     // get the unit
     const unit = timeSplit[1];
+
+    const unitFromLabel = this.timelabelFromUnit(unit);
+
+    if (unitFromLabel === "") {
+      return 0;
+    }
+
     // if the unit is minutes/minute/min
-    if (unit === "minutes" || unit === "minute" || unit === "min") {
+    if (unitFromLabel === "minute") {
       // return the number of seconds
       return number * 60;
-    }
-    // if the unit is hours/hour
-    else if (unit === "hours" || unit === "hour" || unit === "h") {
+    } else if (unitFromLabel === "hour") {
+      // if the unit is hours/hour/h
       // return the number of seconds
       return number * 60 * 60;
-    }
-    // if the unit is days/day
-    else if (unit === "days" || unit === "day" || unit === "d") {
+    } else if (unitFromLabel === "day") {
+      // if the unit is days/day/d
       // return the number of seconds
       return number * 60 * 60 * 24;
-    }
-    // if the unit is weeks/week
-    else if (unit === "weeks" || unit === "week" || unit === "w") {
+    } else if (unitFromLabel === "week") {
+      // if the unit is weeks/week/w
       // return the number of seconds
       return number * 60 * 60 * 24 * 7;
-    }
-    // if the unit is months/month
-    else if (unit === "months" || unit === "month" || unit === "m") {
+    } else if (unitFromLabel === "month") {
+      // if the unit is months/month/m
       // return the number of seconds
-      return number * 60 * 60 * 24 * 7 * 30;
-    }
-    // if the unit is not recognized
-    else {
+      return number * 60 * 60 * 24 * 7 * 4;
+    } else {
+      // if the unit is not recognized
       // return 0
       return 0;
     }

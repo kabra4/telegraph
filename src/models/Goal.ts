@@ -1,10 +1,10 @@
 // GoalModel class extends Model class
 // uses IGoal interface
 import Model from "./Model";
-import { IGoal } from "./types";
+import { GoalData } from "./types";
 
 export default class Goal extends Model {
-  public declare data: IGoal;
+  public declare data: GoalData;
   // the constructor of the goal model
   // takes the id of the goal model
   constructor(id: string = "", collectionName: string = "goals") {

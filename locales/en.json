@@ -141,6 +141,9 @@
 					"next": "Next"
 				}
 			},
+			"calendar_multiselect": {
+				"text": "Select day/days of the reminder\nYou can select one or more days by clicking on them"
+			},
 			"time": {
 				"text": "reminder.questions.time.text"
 			},
@@ -162,5 +165,10 @@
 				}
 			}
 		}
+	},
+	"days": {
+		"today": "Today",
+		"tomorrow": "Tomorrow",
+		"yesterday": "Yesterday"
 	}
 }

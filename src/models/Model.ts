@@ -25,10 +25,8 @@ export default class Model {
 
   // the constructor of the model
   // takes the id of the model
-  constructor(id: string = "", collectionName: string = "default") {
-    this.id = id;
-    // this.createdAt = null;
-    // this.updatedAt = null;
+  constructor(id?: string, collectionName: string = "default") {
+    this.id = id || "";
     this.collectionName = collectionName;
 
     this.pb = new PocketBase("http://127.0.0.1:8090");

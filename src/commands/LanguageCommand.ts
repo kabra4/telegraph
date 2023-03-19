@@ -32,7 +32,7 @@ export default class LanguageCommand {
       }
     >
   ): void {
-    new TgUser().getByTgId(ctx.from.id).then((res) => {
+    new TgUser().getDataByTgId(ctx.from.id).then((res) => {
       ls.setLocale(res.language);
       ctx.reply(
         ls.__("lang.question"),
