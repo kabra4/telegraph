@@ -1,0 +1,106 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Chat {
+  id          Int       @id
+  language    String?
+  active      Boolean?
+  last_active DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  tasks       Task[]
+}
+
+model User {
+  id              Int       @id
+  name            String?
+  last_name       String?
+  username        String?
+  phone_number    Int?
+  language        String?
+  task_options    Json?
+  active          Boolean?
+  currently_doing String?
+  last_active     DateTime?
+  superuser       Boolean?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  tasks           Task[]
+  goals           Goal[]
+}
+
+model Group {
+  id          Int       @id
+  username    String?
+  language    String?
+  admins      String[]
+  active      Boolean?
+  last_active DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  tasks       Task[]
+}
+
+model Task {
+  id                  Int      @id @default(autoincrement())
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+  is_beforehand       Boolean?
+  beforehand_owner_id Int?     @unique
+  name                String?
+  chat_id             Int?
+  user_id             Int?
+  group_id            Int?
+  is_repeatable       Boolean?
+  repeat_type         String?
+
+  repeat_scheme               RepeatScheme?
+  trigger_timestamp           DateTime?
+  last_triggered_timestamp    DateTime?
+  trigger_count               Int?
+  max_trigger_count           Int?
+  action_type                 String?
+  has_beforehand_notification Boolean?
+  beforehand_seconds          Int?
+  goal_id                     Int?
+  content_text                String?
+  beforehand_task             Task?         @relation("TaskOwner")
+  beforehand_owner            Task?         @relation("TaskOwner", fields: [beforehand_owner_id], references: [id])
+  chat                        Chat?         @relation(fields: [chat_id], references: [id])
+  user                        User?         @relation(fields: [user_id], references: [id])
+  group                       Group?        @relation(fields: [group_id], references: [id])
+  goal                        Goal?
+}
+
+model Goal {
+  id            Int       @id @default(autoincrement())
+  user_id       Int?
+  name          String?
+  success_count Int?
+  total_count   Int?
+  streak_count  Int?
+  last_success  DateTime?
+  task_id       Int       @unique
+  user          User?     @relation(fields: [user_id], references: [id])
+  task          Task?     @relation(fields: [task_id], references: [id])
+}
+
+model RepeatScheme {
+  id               Int     @id @default(autoincrement())
+  months_of_year   Int[]
+  days_of_week     Int[]
+  days_of_month    Int[]
+  trigger_time     String?
+  interval_minutes Int?
+  tasks_id         Int     @unique
+  tasks            Task?   @relation(fields: [tasks_id], references: [id])
+}

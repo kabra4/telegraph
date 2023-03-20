@@ -8,13 +8,11 @@
     "node": ">=18.0"
   },
   "scripts": {
-    "test": "tsc -w && pocketbase serve",
     "build": "tsc --build --clean",
     "ts-watch": "tsc -w",
-    "pocketbase": "",
     "nodemon": "nodemon --experimental-specifier-resolution=node dist/app.js",
-    "start": "concurrently \"pocketbase serve\" \"node --experimental-specifier-resolution=node dist/app.js\"",
-    "dev": "concurrently \"tsc -w\" \"pocketbase serve\" \"nodemon --experimental-specifier-resolution=node dist/app.js\""
+    "start": "node --experimental-specifier-resolution=node dist/app.js",
+    "dev": "concurrently \"tsc -w\" \"nodemon --experimental-specifier-resolution=node dist/app.js\""
   },
   "repository": {
     "type": "git",
@@ -36,14 +34,15 @@
     "@typescript-eslint/eslint-plugin": "^5.46.0",
     "@typescript-eslint/parser": "^5.46.0",
     "nodemon": "^2.0.20",
+    "prisma": "^4.11.0",
     "tslint": "^6.1.3",
     "typescript": "^4.9.4"
   },
   "dependencies": {
+    "@prisma/client": "^4.11.0",
     "concurrently": "^7.6.0",
     "dotenv": "^16.0.3",
     "i18n": "^0.15.1",
-    "pocketbase": "^0.9.0",
     "telegraf": "^4.11.2"
   }
 }

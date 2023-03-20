@@ -2,7 +2,6 @@
 
 import { Context, NarrowedContext } from "telegraf";
 import { Update, Message, CallbackQuery } from "typegram";
-import { ReminderOptions } from "../models/types";
-import TgUser from "../models/TgUser";
+import { TaskOptions } from "../models/types";
 
 // export default class ReminderHandler {

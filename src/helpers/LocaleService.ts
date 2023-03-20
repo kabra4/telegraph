@@ -9,14 +9,14 @@ import { I18n } from "i18n";
 import i18n from "../configs/i18n.config";
 
 export class LocaleService {
-  private static _instance: LocaleService;
+    private static _instance: LocaleService;
 
-  public static get Instance() {
-    // Do you need arguments? Make it a regular static method instead.
-    return this._instance || (this._instance = new this(i18n));
-  }
-  i18nProvider: I18n;
-  /**
+    public static get Instance() {
+        // Do you need arguments? Make it a regular static method instead.
+        return this._instance || (this._instance = new this(i18n));
+    }
+    i18nProvider: I18n;
+    /**
    
      *
   
@@ -24,11 +24,11 @@ export class LocaleService {
   
      */
 
-  constructor(i18nProvider: I18n) {
-    this.i18nProvider = i18nProvider;
-  }
+    constructor(i18nProvider: I18n) {
+        this.i18nProvider = i18nProvider;
+    }
 
-  /**
+    /**
   
      *
   
@@ -36,11 +36,11 @@ export class LocaleService {
   
      */
 
-  getCurrentLocale() {
-    return this.i18nProvider.getLocale();
-  }
+    getCurrentLocale() {
+        return this.i18nProvider.getLocale();
+    }
 
-  /**
+    /**
   
      *
   
@@ -48,11 +48,11 @@ export class LocaleService {
   
      */
 
-  getLocales() {
-    return this.i18nProvider.getLocales();
-  }
+    getLocales() {
+        return this.i18nProvider.getLocales();
+    }
 
-  /**
+    /**
   
      *
   
@@ -60,13 +60,13 @@ export class LocaleService {
   
      */
 
-  setLocale(locale: string) {
-    if (this.getLocales().indexOf(locale) !== -1) {
-      this.i18nProvider.setLocale(locale);
+    setLocale(locale: string) {
+        if (this.getLocales().indexOf(locale) !== -1) {
+            this.i18nProvider.setLocale(locale);
+        }
     }
-  }
 
-  /**
+    /**
   
      *
   
@@ -78,11 +78,11 @@ export class LocaleService {
   
      */
 
-  __(text: string, args: any | undefined = undefined) {
-    return this.i18nProvider.__(text, args);
-  }
+    __(text: string, args: any | undefined = undefined) {
+        return this.i18nProvider.__(text, args);
+    }
 
-  /**
+    /**
   
      *
   
@@ -94,7 +94,7 @@ export class LocaleService {
   
      */
 
-  __n(phrase: string, count: number) {
-    return this.i18nProvider.__n(phrase, count);
-  }
+    __n(phrase: string, count: number) {
+        return this.i18nProvider.__n(phrase, count);
+    }
 }

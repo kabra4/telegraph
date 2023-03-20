@@ -8,7 +8,6 @@ import { CallbackQuery, Message, Update } from "typegram";
 
 // import dotenv from "dotenv";
 import { LocaleService } from "../helpers/LocaleService";
-import TgUser from "../models/TgUser";
 import { lstat } from "fs";
 import { inlineKeyboard } from "telegraf/typings/markup";
 
@@ -266,37 +265,6 @@ export default class CalendarMaker {
         }
 
         keyboard.push(navigationButtons);
-
-        // if (fast_select === "month") {
-        //   fast_select_cbtext = this.cbText(
-        //     "TODAYmonth",
-        //     now.getFullYear(),
-        //     (now.getMonth() + 1).toString().padStart(2, "0"),
-        //     "01",
-        //     locale_
-        //   );
-        // } else {
-        //   fast_select_cbtext = this.cbText(
-        //     "TODAY",
-        //     now.getFullYear(),
-        //     (now.getMonth() + 1).toString().padStart(2, "0"),
-        //     now.getDate(),
-        //     locale_
-        //   );
-        // }
-        // let fast_select_text =
-        //   fast_select === "month"
-        //     ? `- ${monthNames[now.getMonth()]} -`
-        //     : "- Today -";
-        // const prevMonth = this.cbText("PREVyear", year - 1, "00", "00", locale_);
-        // const nextMonth = this.cbText("NEXTyear", year + 1, "00", "00", locale_);
-
-        // // add navigation buttons
-        // keyboard.push([
-        //   Markup.button.callback("<", prevMonth),
-        //   Markup.button.callback(fast_select_text, fast_select_cbtext),
-        //   Markup.button.callback(">", nextMonth),
-        // ]);
 
         return Markup.inlineKeyboard(keyboard);
     }

@@ -62,7 +62,7 @@
 		},
 		"questions": {
 			"start": {
-				"text": "Is remaider should be *repeated*?\nEvents like birthdays, anniversaries are repeated\\.",
+				"text": "Is remaider should be *repeated*?\nEvents like birthdays, anniversaries are repeated",
 				"options": {
 					"yes": "Yes",
 					"no": "No"

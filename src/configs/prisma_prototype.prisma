@@ -1,0 +1,211 @@
+// this is postgresql version:
+// CREATE TYPE "repeat_type" AS ENUM (
+//   'daily',
+//   'weekly',
+//   'monthly',
+//   'yearly'
+// );
+
+// CREATE TYPE "action_type" AS ENUM (
+//   'message',
+//   'notify_all',
+//   'beforehand_notification',
+//   'get_goal_status'
+// );
+
+// CREATE TABLE "chat" (
+//   "id" int PRIMARY KEY,
+//   "language" text,
+//   "active" boolean,
+//   "last_active" datetime,
+//   "createdAt" datetime,
+//   "updatedAt" datetime
+// );
+
+// CREATE TABLE "user" (
+//   "id" int PRIMARY KEY,
+//   "name" text,
+//   "surename" text,
+//   "username" text,
+//   "phone_number" int,
+//   "language" text,
+//   "task_options" json,
+//   "active" boolean,
+//   "last_active" datetime,
+//   "superuser" boolean,
+//   "createdAt" datetime,
+//   "updatedAt" datetime
+// );
+
+// CREATE TABLE "group" (
+//   "id" int PRIMARY KEY,
+//   "username" text,
+//   "language" text,
+//   "admins" text[],
+//   "active" boolean,
+//   "last_active" datetime,
+//   "createdAt" datetime,
+//   "updatedAt" datetime
+// );
+
+// CREATE TABLE "task" (
+//   "id" int PRIMARY KEY,
+//   "createdAt" datetime,
+//   "updatedAt" datetime,
+//   "is_beforehand" boolean,
+//   "beforehand_owner_id" int,
+//   "name" text,
+//   "chat_id" int,
+//   "user_id" int,
+//   "group_id" int,
+//   "is_repeatable" boolean,
+//   "repeat_type" repeat_type,
+//   "repeat_scheme_id" int,
+//   "trigger_timestamp" timestamp,
+//   "last_triggered_timestamp" timestamp,
+//   "trigger_count" int,
+//   "max_trigger_count" int,
+//   "action_type" action_type,
+//   "has_beforehand_notification" boolean,
+//   "beforehand_seconds" int,
+//   "goal_id" int,
+//   "content_text" text
+// );
+
+// CREATE TABLE "goal" (
+//   "id" int PRIMARY KEY,
+//   "user_id" int,
+//   "name" text,
+//   "success_count" int,
+//   "total_count" int,
+//   "streak_count" int,
+//   "last_success" datetime
+// );
+
+// CREATE TABLE "repeat_scheme" (
+//   "id" int PRIMARY KEY,
+//   "months_of_year" int[],
+//   "days_of_week" int[],
+//   "days_of_month" int[],
+//   "trigger_time" text,
+//   "interval_minutes" int
+// );
+
+// ALTER TABLE "task" ADD FOREIGN KEY ("beforehand_owner_id") REFERENCES "task" ("id");
+
+// ALTER TABLE "task" ADD FOREIGN KEY ("chat_id") REFERENCES "chat" ("id");
+
+// ALTER TABLE "task" ADD FOREIGN KEY ("user_id") REFERENCES "user" ("id");
+
+// ALTER TABLE "task" ADD FOREIGN KEY ("group_id") REFERENCES "group" ("id");
+
+// ALTER TABLE "task" ADD FOREIGN KEY ("repeat_scheme_id") REFERENCES "repeat_scheme" ("id");
+
+// ALTER TABLE "task" ADD FOREIGN KEY ("goal_id") REFERENCES "goal" ("id");
+
+// ALTER TABLE "goal" ADD FOREIGN KEY ("user_id") REFERENCES "user" ("id");
+
+
+// this is prism version:
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Chat {
+  id            Int      @id
+  language      String?
+  active        Boolean?
+  last_active   DateTime?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  tasks         Task[]
+}
+
+model User {
+  id            Int      @id
+  name          String?
+  surename      String?
+  username      String?
+  phone_number  Int?
+  language      String?
+  task_options  Json?
+  active        Boolean?
+  last_active   DateTime?
+  superuser     Boolean?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  tasks         Task[]
+  goals         Goal[]
+}
+
+model Group {
+  id            Int      @id
+  username      String?
+  language      String?
+  admins        String[]
+  active        Boolean?
+  last_active   DateTime?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  tasks         Task[]
+}
+
+model Task {
+  id                        Int      @id @default(autoincrement())
+  createdAt                 DateTime @default(now())
+  updatedAt                 DateTime @updatedAt
+  is_beforehand             Boolean?
+  beforehand_owner_id       Int?     @unique
+  name                      String?
+  chat_id                   Int?
+  user_id                   Int?
+  group_id                  Int?
+  is_repeatable             Boolean?
+  repeat_type               String?
+
+  repeat_scheme             RepeatScheme?
+  trigger_timestamp         DateTime?
+  last_triggered_timestamp  DateTime?
+  trigger_count             Int?
+  max_trigger_count         Int?
+  action_type               String?
+  has_beforehand_notification Boolean?
+  beforehand_seconds        Int?
+  goal_id                   Int?
+  content_text              String?
+  beforehand_task           Task?    @relation("TaskOwner")
+  beforehand_owner          Task?    @relation("TaskOwner", fields: [beforehand_owner_id], references: [id])
+  chat                      Chat?    @relation(fields: [chat_id], references: [id])
+  user                      User?    @relation(fields: [user_id], references: [id])
+  group                     Group?   @relation(fields: [group_id], references: [id])
+  goal                      Goal? 
+}
+
+model Goal {
+  id            Int      @id @default(autoincrement())
+  user_id       Int?
+  name          String?
+  success_count Int?
+  total_count   Int?
+  streak_count  Int?
+  last_success  DateTime?
+  task_id       Int      @unique
+  user          User?    @relation(fields: [user_id], references: [id])
+  task          Task?    @relation(fields: [task_id], references: [id])
+}
+
+model RepeatScheme {
+  id               Int      @id @default(autoincrement())
+  months_of_year   Int[]
+  days_of_week     Int[]
+  days_of_month    Int[]
+  trigger_time     String?
+  interval_minutes Int?
+  tasks_id         Int     @unique
+  tasks            Task?    @relation(fields: [tasks_id], references: [id])
+}
