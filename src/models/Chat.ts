@@ -1,6 +1,6 @@
 import { prisma } from "../helpers/prismaClient";
 import { Chat as chatType } from "@prisma/client";
-import { chatProperties, TaskOptions } from "./types";
+import { chatProperties, SelectedTaskOptions } from "./types";
 
 export default class Chat {
     public id: number;

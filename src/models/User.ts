@@ -1,6 +1,8 @@
 import { prisma } from "../helpers/prismaClient";
 import { User as userType } from "@prisma/client";
-import { userProperties, TaskOptions } from "./types";
+import { userProperties, SelectedTaskOptions, TaskProperties } from "./types";
+import RepeatScheme from "./RepeatScheme";
+import Task from "./Task";
 
 export default class User {
     public id: number;
@@ -12,7 +14,7 @@ export default class User {
     public language: string = "ru";
     public currently_doing: string = "";
 
-    public task_options: TaskOptions = {};
+    public task_options: SelectedTaskOptions = {};
 
     // the constructor of the user
     // takes the id of the user
@@ -21,50 +23,15 @@ export default class User {
         this.data = {} as userType;
         if (this.id !== 0) {
             this.getData();
-            this.task_options = this.data.task_options as TaskOptions;
+            this.task_options = this.data.task_options as SelectedTaskOptions;
         }
     }
 
-    // the function to get the data of the user
-    // returns the data of the user
-    public async getData(): Promise<void> {
-        try {
-            this.data = await this.handler.findUnique({
-                where: {
-                    id: this.id,
-                },
-            });
-            if (this.data) {
-                this.language = this.data.language || "ru";
-                this.currently_doing = this.data.currently_doing || "";
-                this.task_options =
-                    (this.data.task_options as TaskOptions) || {};
-            }
-        } catch (err) {
-            return;
-        }
-    }
-
-    // the function to get the id of the user
-    // returns the id of the user
-    public getId(): number {
-        return this.id;
-    }
-
-    // the function to set the data of the user
-    // takes the data of the user
-    // returns the data of the user
-    public async setData(data: { [key: string]: any }): Promise<void> {
-        try {
-            this.data = await this.handler.update({
-                where: {
-                    id: this.id,
-                },
-                data,
-            });
-        } catch (err) {
-            return;
-        }
+    public static async findUser(id: number): Promise<User> {
+        const user = new User();
+        user.id = id;
+        await user.getData();
+        return user;
     }
 
     // the function to create a new user
@@ -75,10 +42,10 @@ export default class User {
         name: string,
         last_name: string = "",
         username: string = "",
-        language: string = "en"
+        language: string = "ru"
     ): Promise<void> {
         if (!this.systemLanguages.includes(language)) {
-            language = "en";
+            language = "ru";
         }
         try {
             this.data = await this.handler.create({
@@ -97,9 +64,37 @@ export default class User {
         }
     }
 
+    // the function to get the data of the user
+    // returns the data of the user
+    public async getData(): Promise<void> {
+        try {
+            this.data = await this.handler.findUnique({
+                where: {
+                    id: this.id,
+                },
+            });
+            if (this.data) {
+                this.language = this.data.language || "ru";
+                this.currently_doing = this.data.currently_doing || "";
+                this.task_options = (this.data.task_options as SelectedTaskOptions) || {};
+            }
+        } catch (err) {
+            return;
+        }
+    }
+
+    // the function to get the id of the user
+    // returns the id of the user
+    public getId(): number {
+        return this.id;
+    }
+
     // the function to delete the user
     // returns the data of the user
     public async delete(): Promise<void> {
+        if (this.id === 0) {
+            return;
+        }
         try {
             this.data = await this.handler.delete({
                 where: {
@@ -111,107 +106,54 @@ export default class User {
         }
     }
 
-    // the function to get the task options of the user
-    // returns the task options of the user
-    public getTaskOptions(): TaskOptions {
+    public getTaskOptions(): SelectedTaskOptions {
         return this.task_options;
+    }
+
+    public async update(data: userProperties): Promise<void> {
+        try {
+            this.data = await this.handler.update({
+                where: {
+                    id: this.id,
+                },
+                data,
+            });
+        } catch (err) {
+            return;
+        }
     }
 
     // the function to set the task options of the user
     // takes the task options of the user
     // returns the task options of the user
-    public async updateTaskOptionProperty(
-        property: TaskOptions
-    ): Promise<void> {
+    public async updateTaskOptionProperty(property: SelectedTaskOptions): Promise<void> {
         this.task_options = {
             ...this.task_options,
             ...property,
         };
-        try {
-            this.data = await this.handler.update({
-                where: {
-                    id: this.id,
-                },
-                data: {
-                    task_options: this.task_options,
-                },
-            });
-        } catch (err) {
-            return;
-        }
+        await this.update({ task_options: this.task_options });
     }
 
-    public async resetReminderOptions(): Promise<void> {
-        try {
-            this.data = await this.handler.update({
-                where: {
-                    id: this.id,
-                },
-                data: {
-                    task_options: {},
-                },
-            });
-            this.task_options = {};
-        } catch (err) {
-            return;
-        }
-    }
-
-    public static async findUser(id: number): Promise<User> {
-        const user = new User();
-        user.id = id;
-        await user.getData();
-        return user;
+    public async resetReminderOptions(options?: SelectedTaskOptions): Promise<void> {
+        await this.update({ task_options: options || {} });
+        this.task_options = {};
     }
 
     public async updateLanguage(language: string): Promise<void> {
         if (!this.systemLanguages.includes(language)) {
             language = "en";
         }
-        try {
-            this.data = await this.handler.update({
-                where: {
-                    id: this.id,
-                },
-                data: {
-                    language,
-                },
-            });
-            this.language = language;
-        } catch (err) {
-            return;
-        }
+        await this.update({ language });
+        this.language = language;
     }
 
     public async updateCurrentlyDoing(currently_doing: string): Promise<void> {
-        try {
-            this.data = await this.handler.update({
-                where: {
-                    id: this.id,
-                },
-                data: {
-                    currently_doing,
-                },
-            });
-            this.currently_doing = currently_doing;
-        } catch (err) {
-            return;
-        }
+        await this.update({ currently_doing });
+        this.currently_doing = currently_doing;
     }
 
     public async save(): Promise<void> {
-        try {
-            this.data = await this.handler.update({
-                where: {
-                    id: this.id,
-                },
-                data: {
-                    ...this.systemPropertiesRemover(this.data),
-                },
-            });
-        } catch (err) {
-            return;
-        }
+        await this.update(this.systemPropertiesRemover(this.data));
     }
 
     private systemPropertiesRemover(data: userType | null): userProperties {
@@ -237,5 +179,30 @@ export default class User {
             checked_days.push(day);
         }
         this.save();
+    }
+
+    public should_ask_beforehand_time(): boolean {
+        /* true when: task_options.repeat is true or
+        (task_options.repeat is false and task_options.repeat_cycle === "yearly") */
+        return this.task_options.repeat || this.task_options.repeat_cycle === "yearly";
+    }
+
+    public async taskFromSelectedTaskOptions(chat_id: number): Promise<Task> {
+        const task = new Task();
+        task.user_id = this.id;
+        task.chat_id = chat_id;
+        task.name = this.task_options.name || "";
+        task.action_type = this.task_options.action_type || "task";
+        task.has_beforehand_notification = this.task_options.has_beforehand || false;
+
+        const repeat_scheme = RepeatScheme.fromSelectedTaskOptions(this.task_options);
+        const nextTrigger = await repeat_scheme.getNextTrigger();
+        task.trigger_timestamp = nextTrigger;
+
+        if (task.has_beforehand_notification) {
+            task.beforehand_task = task.createBeforehandTask(task.beforehand_seconds);
+        }
+
+        return task;
     }
 }

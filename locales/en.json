@@ -6,7 +6,7 @@
 		"1": "/start - start bot",
 		"2": "/help - show all commands",
 		"3": "/lang - change language",
-		"4": "/rmdr - set reminder"
+		"4": "/task - create a task"
 	},
 	"lang": {
 		"name": "English",
@@ -31,7 +31,7 @@
 		"select_all": "Select all",
 		"deselect_all": "Deselect all"
 	},
-	"reminder": {
+	"task": {
 		"calendar": {
 			"months": {
 				"january": "January",
@@ -62,14 +62,14 @@
 		},
 		"questions": {
 			"start": {
-				"text": "Is remaider should be *repeated*?\nEvents like birthdays, anniversaries are repeated",
+				"text": "Should the task be *repeated*?\nEvents like birthdays, anniversaries are repeated",
 				"options": {
 					"yes": "Yes",
 					"no": "No"
 				}
 			},
 			"repeat": {
-				"text": "How often should the reminder be repeated?",
+				"text": "How often should the task be repeated?",
 				"options": {
 					"daily": "Daily",
 					"weekly": "Weekly",
@@ -83,34 +83,34 @@
 					"text": "Select day/days of the month"
 				},
 				"daily": {
-					"text": "Send the time of the reminder as *HH:MM*\\.\nExample: 12:00 or 12\\.00"
+					"text": "Send the time of the task as *HH:MM*\\.\nExample: 12:00 or 12\\.00"
 				}
 			},
 			"calendar_1": {
-				"text": "Select the date of the reminder"
+				"text": "Select the date of the task"
 			},
 			"send_time": {
-				"multiple": "Send the time of the reminder as *HH:MM*\\.\nExample: 12:00 or 12\\.00",
-				"single": "Send the time of the reminder as *HH:MM*\\.\nExample: 12:00 or 12\\.00"
+				"multiple": "Send the time of the task as *HH:MM*\\.\nExample: 12:00 or 12\\.00",
+				"single": "Send the time of the task as *HH:MM*\\.\nExample: 12:00 or 12\\.00"
 			},
 			"send_reminder_name": {
-				"text": "Send the name of the reminder"
+				"text": "Send the name of the task"
 			},
 			"send_reminder_text": {
-				"text": "Send the text of the reminder",
+				"text": "Send the text of the task",
 				"options": {
 					"skip": "Skip"
 				}
 			},
 			"has_it_beforehand": {
-				"text": "Do you want to set a reminder before the event?\nFor example, if you set a reminder for a birthday, you can set a reminder for a week before the birthday.",
+				"text": "Do you want to set a task before the event?\nFor example, if you set a task for a birthday, you can set a task for a week before the birthday.",
 				"options": {
 					"yes": "Yes",
 					"no": "No"
 				}
 			},
 			"select_beforehand_time": {
-				"text": "Select how much time before the event should the reminder be set or send the time before the event.\nExample: 5 days\nsupported time units: minutes, hours, days, weeks",
+				"text": "Select how much time before the event should the task be set or send the time before the event.\nExample: 5 days\nsupported time units: minutes, hours, days, weeks",
 				"options": {
 					"10 minutes": "10 minutes",
 					"30 minutes": "30 minutes",
@@ -128,43 +128,36 @@
 				"text": "Send the time before the event.\nExample: 5 days\nsupported time units: hours, days, weeks, months"
 			},
 			"calendar_month": {
-				"text": "Select day/days of the reminder\nYou can select one or more days by clicking on them",
+				"text": "Select day/days of the task\nYou can select one or more days by clicking on them",
 				"options": {
 					"deselect_all": "Deselect all",
 					"next": "Next"
 				}
 			},
 			"calendar_weekdays": {
-				"text": "Select day/days of the reminder\nYou can select one or more days by clicking on them",
+				"text": "Select day/days of the task\nYou can select one or more days by clicking on them",
 				"options": {
 					"deselect_all": "Deselect all",
 					"next": "Next"
 				}
 			},
 			"calendar_multiselect": {
-				"text": "Select day/days of the reminder\nYou can select one or more days by clicking on them"
+				"text": "Select day/days of the task\nYou can select one or more days by clicking on them"
 			},
 			"time": {
-				"text": "reminder.questions.time.text"
+				"text": "task.questions.time.text"
 			},
 			"multiselect_calendar": {
-				"text": "reminder.questions.multiselect_calendar.text"
+				"text": "task.questions.multiselect_calendar.text"
+			},
+			"error": {
+				"invalid_date": "Invalid date",
+				"invalid_time": "Invalid time",
+				"date_in_past": "Date is in the past"
 			}
 		},
 		"reminder_set": "Reminder was successfully set to %s",
 		"reminder_has_not_set": "Reminder has not set"
-	},
-	"rmdr": {
-		"questions": {
-			"repeat": {
-				"options": {
-					"daily": "rmdr.questions.repeat.options.daily",
-					"weekly": "rmdr.questions.repeat.options.weekly",
-					"monthly": "rmdr.questions.repeat.options.monthly",
-					"yearly": "rmdr.questions.repeat.options.yearly"
-				}
-			}
-		}
 	},
 	"days": {
 		"today": "Today",

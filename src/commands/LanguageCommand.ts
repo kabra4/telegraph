@@ -13,13 +13,13 @@ export default class LanguageCommand {
 
     constructor(bot: Telegraf<Context<Update>>) {
         this.bot = bot;
-        this.bot.command("lang", (ctx) => this.start(ctx));
+        this.bot.command("lang", (ctx) => this.lang(ctx));
         this.bot.action("lang.en", (ctx) => this.changeLanguageTo(ctx, "en"));
         this.bot.action("lang.ru", (ctx) => this.changeLanguageTo(ctx, "ru"));
         this.bot.action("lang.uz", (ctx) => this.changeLanguageTo(ctx, "uz"));
     }
 
-    public async start(ctx: commandCtx): Promise<void> {
+    public async lang(ctx: commandCtx): Promise<void> {
         const user = await User.findUser(ctx.from.id);
         this.askLanguage(ctx.from.id, user.language);
     }

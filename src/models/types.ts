@@ -14,7 +14,7 @@ type TgUserData = {
     phone_number: string;
     language: string;
     active: boolean;
-    reminder_options: TaskOptions;
+    reminder_options: SelectedTaskOptions;
     superuser: boolean;
     last_active: Date;
     is_currently_doing: string;
@@ -32,11 +32,39 @@ type userProperties = {
     superuser?: boolean;
 };
 
+type TaskProperties = {
+    is_beforehand?: boolean | null;
+    beforehand_owner_id?: number | null;
+    name?: string | null;
+    chat_id?: number | null;
+    user_id?: number | null;
+    group_id?: number | null;
+    trigger_timestamp?: Date | null;
+    last_triggered_timestamp?: Date | null;
+    trigger_count?: number | null;
+    max_trigger_count?: number | null;
+    action_type?: string | null;
+    has_beforehand_notification?: boolean | null;
+    beforehand_seconds?: number | null;
+    goal_id?: number | null;
+    content_text?: string | null;
+};
+
+type RepeatSchemeProperties = {
+    days_of_week?: number[];
+    days_of_month?: number[];
+    trigger_time?: string | null;
+    interval_minutes?: number | null;
+    tasks_id?: number;
+    is_repeatable?: boolean | null;
+    repeat_type?: string | null;
+};
+
 type chatProperties = {
     name?: string;
     language?: string;
 };
-type TaskOptions = {
+type SelectedTaskOptions = {
     name?: string;
     repeat?: boolean;
     repeat_is_checked?: boolean;
@@ -46,6 +74,7 @@ type TaskOptions = {
     checked_days?: string[];
     time?: string;
     time_list?: string[];
+    action_type?: string;
     beforehand_selected?: boolean;
     has_beforehand?: boolean;
     beforehand_time?: number;
@@ -155,6 +184,11 @@ type helpCtx = NarrowedContext<
     }
 >;
 
+type textMessageCtx = NarrowedContext<
+    Context<Update>,
+    Update.MessageUpdate<Record<"text", {}> & Message.TextMessage>
+>;
+
 // export all types
 export {
     TgUserData,
@@ -162,7 +196,7 @@ export {
     GoalData,
     RepeatSchemeData,
     ReminderData,
-    TaskOptions,
+    SelectedTaskOptions,
     commandCtx,
     actionCtx,
     hearsCtx,
@@ -171,4 +205,7 @@ export {
     chatProperties,
     startCtx,
     helpCtx,
+    textMessageCtx,
+    TaskProperties,
+    RepeatSchemeProperties,
 };

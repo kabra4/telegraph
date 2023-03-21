@@ -60,8 +60,6 @@ model Task {
   chat_id             Int?
   user_id             Int?
   group_id            Int?
-  is_repeatable       Boolean?
-  repeat_type         String?
 
   repeat_scheme               RepeatScheme?
   trigger_timestamp           DateTime?
@@ -95,12 +93,14 @@ model Goal {
 }
 
 model RepeatScheme {
-  id               Int     @id @default(autoincrement())
-  months_of_year   Int[]
+  id               Int      @id @default(autoincrement())
   days_of_week     Int[]
   days_of_month    Int[]
+  is_repeatable    Boolean?
+  repeat_type      String?
   trigger_time     String?
+  trigger_date     String?
   interval_minutes Int?
-  tasks_id         Int     @unique
-  tasks            Task?   @relation(fields: [tasks_id], references: [id])
+  tasks_id         Int      @unique
+  tasks            Task?    @relation(fields: [tasks_id], references: [id])
 }

@@ -6,7 +6,7 @@ import { LocaleService } from "./helpers/LocaleService";
 import BasicCommandController from "./controllers/CommandsController";
 // import ActionController from "./controllers/ActionController";
 import LanguageCommand from "./commands/LanguageCommand";
-import ReminderCommand from "./commands/ReminderCommand";
+import ReminderCommand from "./commands/TaskCommand";
 import "./helpers/TimeFunctions";
 
 dotenv.config();

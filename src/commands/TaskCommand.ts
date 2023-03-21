@@ -1,4 +1,4 @@
-// class to control the reminder command of the bot for the user
+// class to control the task command of the bot for the user
 
 import { Context, Markup, NarrowedContext, Telegraf } from "telegraf";
 import { CallbackQuery, Message, Update } from "typegram";
@@ -6,6 +6,8 @@ import { callbackQuery, message } from "telegraf/filters";
 // import dotenv from "dotenv";
 import { LocaleService } from "../helpers/LocaleService";
 import User from "../models/User";
+import Task from "../models/Task";
+import RepeatScheme from "../models/RepeatScheme";
 import Chat from "../models/Chat";
 import CalendarMaker from "../helpers/CalendarMaker";
 import TimeFunctions from "../helpers/TimeFunctions";
@@ -15,8 +17,8 @@ import {
     actionCtx,
     hearsRegexCtx,
     commandCtx,
+    textMessageCtx,
 } from "../models/types";
-import { inlineKeyboard } from "telegraf/typings/markup";
 
 const ls = LocaleService.Instance;
 
@@ -27,24 +29,26 @@ export default class ReminderController {
     private beforehand_options: string[][] = [
         ["10 minutes", "30 minutes", "1 hour"],
         ["1 day", "3 days", "7 days"],
-        ["custom"],
     ];
 
-    // the constructor of the reminder controller
+    // the constructor of the task controller
     // takes the bot
     constructor(bot: Telegraf<Context<Update>>) {
         this.bot = bot;
-        this.bot.command("rmdr", (ctx) => this.Start(ctx));
+        this.bot.command("task", (ctx) => this.task(ctx));
 
+        this.registerCallbacks();
+    }
+
+    public registerCallbacks(): void {
         // receive "repeat" answer
-        this.bot.action("rmdr.repeat.yes", (ctx) => this.processRepeatYes(ctx));
-        this.bot.action("rmdr.repeat.no", (ctx) => this.processRepeatNo(ctx));
+        this.bot.action("task.repeat.yes", (ctx) => this.processRepeatYes(ctx));
+        this.bot.action("task.repeat.no", (ctx) => this.processRepeatNo(ctx));
 
         // receive "repeat cycle" answer
         this.repeat_cycles.forEach((cycle) => {
-            this.bot.action(
-                "reminder.questions.repeat.options." + cycle,
-                (ctx) => this.processRepeatCycleInput(ctx, cycle)
+            this.bot.action("task.questions.repeat.options." + cycle, (ctx) =>
+                this.processRepeatCycleInput(ctx, cycle)
             );
         });
 
@@ -56,13 +60,11 @@ export default class ReminderController {
         );
 
         // calendar navigation buttons
-        this.bot.action(
-            /calendar\|PREV(month|year)?\|\d{4}-\d{2}-\d{2}/,
-            (ctx) => this.processCalendarNavigation(ctx, "prev")
+        this.bot.action(/calendar\|PREV(month|year)?\|\d{4}-\d{2}-\d{2}/, (ctx) =>
+            this.processCalendarNavigation(ctx, "prev")
         );
-        this.bot.action(
-            /calendar\|NEXT(month|year)?\|\d{4}-\d{2}-\d{2}/,
-            (ctx) => this.processCalendarNavigation(ctx, "next")
+        this.bot.action(/calendar\|NEXT(month|year)?\|\d{4}-\d{2}-\d{2}/, (ctx) =>
+            this.processCalendarNavigation(ctx, "next")
         );
         this.bot.action(/calendar\|TODAY\|\d{4}-\d{2}-\d{2}/, (ctx) =>
             this.processCalendarNavigation(ctx, "today")
@@ -73,35 +75,25 @@ export default class ReminderController {
             this.processMonthCalendar(ctx)
         );
 
-        // receive "time" answer
-        this.bot.hears(
-            /^((0[0-9]|1[0-9]|2[0-3])[:\.]{1}[0-5][0-9])(,\s*(0[0-9]|1[0-9]|2[0-3])[:\.]{1}[0-5][0-9])*$/,
-            (ctx) => this.processTimeInput(ctx)
-        );
-
         // receive "beforehand" answer
-        this.bot.action("rmdr.beforehand.yes", (ctx) =>
+        this.bot.action("task.beforehand.yes", (ctx) =>
             this.processBeforehand(ctx, true)
         );
-        this.bot.action("rmdr.beforehand.no", (ctx) =>
+        this.bot.action("task.beforehand.no", (ctx) =>
             this.processBeforehand(ctx, false)
         );
 
         // receive "beforehand time" answer
         this.beforehand_options.forEach((options) => {
             options.forEach((option) => {
-                this.bot.action(
-                    "reminder.questions.select_beforehand_time.options." +
-                        option,
-                    (ctx) => this.processBeforehandTimeButtonInput(ctx, option)
+                this.bot.action("task.beforehand_time.options." + option, (ctx) =>
+                    this.processBeforehandTimeOption(ctx, option)
                 );
             });
         });
 
         // receive weekDay answer
-        this.bot.action(/^calendarWeekdays\|\d$/, (ctx) =>
-            this.processWeekDayInput(ctx)
-        );
+        this.bot.action(/^calendarWeekdays\|\d$/, (ctx) => this.processWeekDayInput(ctx));
 
         // finished selecting weekDays
         this.bot.action("calendarWeekdays|FINISH", (ctx) =>
@@ -113,15 +105,17 @@ export default class ReminderController {
             this.processCalendarMultiselectInput(ctx)
         );
 
-        this.bot.action(/^calendarMultiselect\|FINISH$/, (ctx) =>
+        this.bot.action("calendarMultiselect|FINISH", (ctx) =>
             this.processMultiselectCalendarFinish(ctx)
         );
+
+        this.bot.action("task.name.skip", (ctx) => this.processNameSkip(ctx));
 
         this.bot.on(message("text"), (ctx) => this.processMessage(ctx));
     }
 
-    // the function to handle the reminder command
-    public async Start(ctx: commandCtx): Promise<void> {
+    // the function to handle the task command
+    public async task(ctx: commandCtx): Promise<void> {
         const hasArguments = ctx.message.text.split(" ").length > 1;
 
         if (!hasArguments) {
@@ -132,20 +126,20 @@ export default class ReminderController {
     public async startTaskCreation(ctx: commandCtx): Promise<void> {
         const user = await User.findUser(ctx.message.from.id);
 
-        user.updateCurrentlyDoing("reminder.repeat");
-        user.resetReminderOptions();
+        await user.updateCurrentlyDoing("task.repeat");
+        user.resetReminderOptions({ action_type: "task" });
 
         ls.setLocale(user.language);
         ctx.replyWithMarkdownV2(
-            ls.__("reminder.questions.start.text"),
+            ls.__("task.questions.start.text"),
             Markup.inlineKeyboard([
                 Markup.button.callback(
-                    ls.__("reminder.questions.start.options.yes"),
-                    "rmdr.repeat.yes"
+                    ls.__("task.questions.start.options.yes"),
+                    "task.repeat.yes"
                 ),
                 Markup.button.callback(
-                    ls.__("reminder.questions.start.options.no"),
-                    "rmdr.repeat.no"
+                    ls.__("task.questions.start.options.no"),
+                    "task.repeat.no"
                 ),
             ])
         );
@@ -154,23 +148,26 @@ export default class ReminderController {
     // the function to process the "beforehand" answer
     // takes the context of the message
     // returns nothing
-    protected async processBeforehand(ctx: actionCtx, beforehand: boolean) {
+    protected async processBeforehand(ctx: actionCtx, beforehand_is_asked: boolean) {
         const user = await User.findUser(ctx.callbackQuery.from.id);
 
-        if (user.currently_doing !== "reminder.beforehand") return;
+        if (user.currently_doing !== "task.beforehand") {
+            ctx.deleteMessage();
+            return;
+        }
 
-        if (beforehand) {
-            // if user answered "yes" to "beforehand" question
-            user.updateCurrentlyDoing("reminder.beforehand_time");
+        if (beforehand_is_asked) {
+            user.updateCurrentlyDoing("task.beforehand_time");
+
             ls.setLocale(user.language);
             ctx.editMessageText(
-                ls.__("reminder.questions.select_beforehand_time.text"),
+                ls.__("task.questions.select_beforehand_time.text"),
                 Markup.inlineKeyboard(
                     this.beforehand_options.map((options) =>
                         options.map((option) =>
                             Markup.button.callback(
                                 ls.__(
-                                    "reminder.questions.select_beforehand_time.options." +
+                                    "task.questions.select_beforehand_time.options." +
                                         option
                                 ),
                                 "task.beforehand_time.options." + option
@@ -180,85 +177,179 @@ export default class ReminderController {
                 )
             );
         } else {
-            // if user answered "no" to "beforehand" question
-            user.currently_doing = "none";
+            await user.updateCurrentlyDoing("task_name");
             user.updateTaskOptionProperty({
                 has_beforehand: false,
                 beforehand_selected: true,
             });
-            ctx.reply("Reminder saved!");
+
+            ls.setLocale(user.language);
+            this.askTaskName(ctx, user);
         }
     }
 
-    private saveReminder(user: User) {
-        //
-        // TODO: save reminder
-        //
+    private async saveTask(ctx: actionCtx | textMessageCtx | hearsCtx, user: User) {
+        let chat_id: number = 0;
+        if (ctx.callbackQuery && ctx.callbackQuery.message) {
+            chat_id = ctx.callbackQuery.message.chat.id;
+        } else if (ctx.message) {
+            chat_id = ctx.message.chat.id;
+        } else if (ctx.chat) {
+            chat_id = ctx.chat.id;
+        }
+        const task = await user.taskFromSelectedTaskOptions(chat_id);
+        await task.save();
+
+        await user.resetReminderOptions();
+
+        ls.setLocale(user.language);
+        ctx.reply(ls.__("task.created"));
     }
 
-    private async processBeforehandTimeButtonInput(
-        ctx: actionCtx,
-        option: string
-    ) {
+    private async processBeforehandTimeOption(ctx: actionCtx, option: string) {
         if (!ctx.from) return;
         const user = await User.findUser(ctx.from.id);
 
-        if (user.currently_doing !== "reminder.beforehand_time") return;
+        if (user.currently_doing !== "task.beforehand_time") return;
+        const inSeconds = TimeFunctions.calculateSecondsFromString(option);
 
-        if (option === "custom") {
-            user.updateCurrentlyDoing("reminder.beforehand_time.custom");
+        await user.updateTaskOptionProperty({
+            beforehand_time: inSeconds,
+            beforehand_selected: true,
+        });
+
+        user.updateCurrentlyDoing("task_name");
+        ls.setLocale(user.language);
+        ctx.reply(ls.__("task.questions.task_name.text"));
+    }
+
+    private async processBeforehandInput(ctx: hearsRegexCtx | textMessageCtx) {
+        const user = await User.findUser(ctx.message.from.id);
+        if (user.currently_doing !== "task.beforehand_time.custom") return;
+
+        if (!TimeFunctions.isValidTime(ctx.message.text)) {
             ls.setLocale(user.language);
-            ctx.reply(ls.__("reminder.questions.custom_beforehand_time.text"));
-        } else {
-            const selectedTime = this.getCallbackText(ctx).split(".")[-1];
-            const inSeconds =
-                TimeFunctions.calculateSecondsFromString(selectedTime);
-            user.updateTaskOptionProperty({
-                beforehand_time: inSeconds,
-                beforehand_selected: true,
-            });
-            user.updateCurrentlyDoing("task_name");
-            ls.setLocale(user.language);
-            ctx.reply(ls.__("reminder.questions.task_name.text"));
+            ctx.reply(ls.__("task.questions.custom_beforehand_time.invalid"));
+            return;
         }
+
+        const inSeconds = TimeFunctions.calculateSecondsFromString(ctx.message.text);
+        user.updateTaskOptionProperty({
+            beforehand_time: inSeconds,
+            beforehand_selected: true,
+        });
+        user.updateCurrentlyDoing("task_name");
+        ls.setLocale(user.language);
+        ctx.reply(ls.__("task.questions.task_name.text"));
     }
 
     // the function to process time message of the user
     // takes the context of the message
     // returns nothing
-    protected async processTimeInput(
-        ctx: NarrowedContext<
-            Context<Update> & {
-                match: RegExpExecArray;
-            },
-            {
-                message: Update.New & Update.NonChannel & Message.TextMessage;
-                update_id: number;
-            }
-        >
-    ) {
+    protected async processTimeInput(ctx: hearsRegexCtx | textMessageCtx) {
         const user = await User.findUser(ctx.message.from.id);
-        if (user.currently_doing !== "reminder.pattern.time") return;
-        user.updateCurrentlyDoing("reminder.beforehand");
-        // user.currently_doing = "reminder.beforehand";
-        user.updateTaskOptionProperty({
+        if (user.currently_doing !== "task.pattern.time") return;
+
+        if (!TimeFunctions.isValidTime(ctx.message.text)) {
+            ls.setLocale(user.language);
+            ctx.reply(ls.__("task.questions.error.invalid_time"));
+            return;
+        }
+
+        const time = this.getTimesFromMessage(ctx.message.text);
+
+        if (time.length > 1) {
+            this.featureNotImplemented(ctx, user);
+            return;
+        }
+
+        await user.updateTaskOptionProperty({
             time: ctx.message.text,
         });
+
+        if (user.should_ask_beforehand_time()) {
+            this.askBeforehandTime(ctx, user);
+        } else {
+            this.askTaskName(ctx, user);
+        }
+    }
+
+    public async askBeforehandTime(ctx: hearsRegexCtx | textMessageCtx, user: User) {
+        user.updateCurrentlyDoing("task.beforehand");
         ls.setLocale(user.language);
         ctx.reply(
-            ls.__("reminder.questions.has_it_beforehand.text"),
+            ls.__("task.questions.has_it_beforehand.text"),
             Markup.inlineKeyboard([
                 Markup.button.callback(
-                    ls.__("reminder.questions.has_it_beforehand.options.yes"),
-                    "rmdr.beforehand.yes"
+                    ls.__("task.questions.has_it_beforehand.options.yes"),
+                    "task.beforehand.yes"
                 ),
                 Markup.button.callback(
-                    ls.__("reminder.questions.has_it_beforehand.options.no"),
-                    "rmdr.beforehand.no"
+                    ls.__("task.questions.has_it_beforehand.options.no"),
+                    "task.beforehand.no"
                 ),
             ])
         );
     }
+
+    public async askTaskName(
+        ctx: hearsRegexCtx | textMessageCtx | actionCtx,
+        user: User
+    ) {
+        user.updateCurrentlyDoing("task.name");
+        ls.setLocale(user.language);
+        ctx.reply(
+            ls.__("task.questions.task_name.text"),
+            Markup.inlineKeyboard([
+                Markup.button.callback(ls.__("buttons.skip"), "task.name.skip"),
+            ])
+        );
+    }
+
+    protected async processNameSkip(ctx: actionCtx) {
+        const user = await User.findUser(ctx.callbackQuery.from.id);
+
+        if (user.currently_doing !== "task.name") {
+            ctx.deleteMessage();
+            return;
+        }
+
+        user.updateCurrentlyDoing("");
+        user.updateTaskOptionProperty({
+            name: "",
+        });
+
+        this.saveTask(ctx, user);
+    }
+
+    // the function to process the "name" answer
+    public async processNameInput(ctx: textMessageCtx) {
+        const user = await User.findUser(ctx.message.from.id);
+
+        if (user.currently_doing !== "task.name") return;
+
+        user.updateCurrentlyDoing("");
+
+        user.updateTaskOptionProperty({
+            name: ctx.message.text,
+        });
+
+        this.saveTask(ctx, user);
+    }
+
+    // says that the feature is not implemented
+    protected featureNotImplemented(
+        ctx: hearsRegexCtx | textMessageCtx,
+        user: User,
+        feature: string = ""
+    ) {
+        const text = feature
+            ? "task.feature_not_implemented." + feature
+            : "task.feature_not_implemented";
+        ls.setLocale(user.language);
+        ctx.reply(ls.__(text));
+    }
+
     // the function to get list of times from the message of the user
     // takes the message of the user with regex match: /^((0[0-9]|1[0-9]|2[0-3])[:\.]{1}[0-5][0-9])(,\s*(0[0-9]|1[0-9]|2[0-3])[:\.]{1}[0-5][0-9])*$/;
     // returns the list of times: string[]
@@ -274,12 +365,15 @@ export default class ReminderController {
     public async processRepeatYes(ctx: actionCtx) {
         const user = await User.findUser(ctx.callbackQuery.from.id);
 
-        if (user.currently_doing !== "reminder.repeat") return;
+        if (user.currently_doing !== "task.repeat") {
+            await ctx.deleteMessage();
+            return;
+        }
 
-        user.updateCurrentlyDoing("reminder.repeat.cycle");
+        await user.updateCurrentlyDoing("task.repeat.cycle");
         ls.setLocale(user.language);
         ctx.editMessageText(
-            ls.__("reminder.questions.repeat.text"),
+            ls.__("task.questions.repeat.text"),
 
             // this is the peak of my engeneering nonsense :D
             Markup.inlineKeyboard(
@@ -287,11 +381,9 @@ export default class ReminderController {
                     [i, i + 1].map((j) =>
                         Markup.button.callback(
                             ls.__(
-                                "reminder.questions.repeat.options." +
-                                    this.repeat_cycles[j]
+                                "task.questions.repeat.options." + this.repeat_cycles[j]
                             ),
-                            "reminder.questions.repeat.options." +
-                                this.repeat_cycles[j]
+                            "task.questions.repeat.options." + this.repeat_cycles[j]
                         )
                     )
                 )
@@ -303,9 +395,9 @@ export default class ReminderController {
     private async processRepeatNo(ctx: actionCtx) {
         const user = await User.findUser(ctx.callbackQuery.from.id);
 
-        if (user.currently_doing !== "reminder.repeat") return;
+        if (user.currently_doing !== "task.repeat") return;
 
-        user.updateCurrentlyDoing("reminder.pattern.date");
+        await user.updateCurrentlyDoing("task.pattern.date");
         user.updateTaskOptionProperty({
             repeat: false,
             repeat_is_checked: true,
@@ -314,75 +406,89 @@ export default class ReminderController {
         const current_year = new Date().getFullYear();
         ls.setLocale(user.language);
         ctx.editMessageText(
-            ls.__("reminder.questions.calendar_1"),
-            await CalendarMaker.makeMonthsGrid(
-                user.language,
-                current_year,
-                true
-            )
+            ls.__("task.questions.calendar_1"),
+            await CalendarMaker.makeMonthsGrid(user.language, current_year, true)
         );
     }
 
     // the function to process the repeat cycle input
-    // takes the context of the bot
     public async processRepeatCycleInput(ctx: actionCtx, cycle: string) {
         const user = await User.findUser(ctx.callbackQuery.from.id);
 
-        if (user.currently_doing !== "reminder.repeat.cycle") return;
+        if (user.currently_doing !== "task.repeat.cycle") {
+            ctx.deleteMessage();
+            return;
+        }
 
         user.updateTaskOptionProperty({
             repeat_cycle: cycle,
         });
 
-        user.updateCurrentlyDoing("reminder.repeat.pattern");
+        user.updateCurrentlyDoing("task.repeat.pattern");
 
         ls.setLocale(user.language);
         if (cycle === "yearly") {
             ctx.editMessageText(
-                ls.__("reminder.questions.calendar_1.text"),
+                ls.__("task.questions.calendar_1.text"),
                 await CalendarMaker.makeMonthsGrid(user.language)
             );
         } else if (cycle === "monthly") {
             ctx.editMessageText(
-                ls.__("reminder.questions.calendar_multiselect.text"),
+                ls.__("task.questions.calendar_multiselect.text"),
                 await CalendarMaker.multiselectCalendar(user.language)
             );
         } else if (cycle === "weekly") {
             ctx.editMessageText(
-                ls.__("reminder.questions.repeat.weekly.text"),
+                ls.__("task.questions.repeat.weekly.text"),
                 await CalendarMaker.weekdaysMarkup(user.language)
             );
         } else if (cycle === "daily") {
             ctx.deleteMessage();
-            ctx.replyWithMarkdownV2(
-                ls.__("reminder.questions.repeat.daily.text")
-            );
+            ctx.replyWithMarkdownV2(ls.__("task.questions.repeat.daily.text"));
         }
     }
 
     // the function to process the "calendar" date input
-    // takes the context of the bot
     public async processDateInput(ctx: actionCtx) {
         const user = await User.findUser(ctx.callbackQuery.from.id);
+
+        if (
+            user.currently_doing !== "task.pattern.date" &&
+            user.currently_doing !== "task.repeat.pattern"
+        ) {
+            ctx.deleteMessage();
+            return;
+        }
+
         const date = ctx.has(callbackQuery("data"))
             ? ctx.callbackQuery.data.split("|")[2]
             : "";
         if (date === "") {
             return;
         }
+        if (!TimeFunctions.isDateInFuture(date)) {
+            ls.setLocale(user.language);
+            ctx.reply(ls.__("task.questions.error.date_in_past"));
+            return;
+        }
 
         user.updateTaskOptionProperty({
             date: date,
         });
-        user.updateCurrentlyDoing("reminder.pattern.time");
+        user.updateCurrentlyDoing("task.pattern.time");
 
         this.askForTime(ctx);
     }
 
     // the function to process the "calendar" navigation
-    // takes the context of the bot
     public async processCalendarNavigation(ctx: actionCtx, navigation: string) {
         const user = await User.findUser(ctx.callbackQuery.from.id);
+
+        if (user.currently_doing !== "task.pattern.date") {
+            ctx.deleteMessage();
+            return;
+        }
+
         const query = this.getCallbackText(ctx);
 
         const date: string = query.split("|")[2];
@@ -395,7 +501,7 @@ export default class ReminderController {
             user.updateTaskOptionProperty({
                 date: date,
             });
-            user.updateCurrentlyDoing("reminder.pattern.time");
+            user.updateCurrentlyDoing("task.pattern.time");
 
             this.askForTime(ctx);
         }
@@ -422,11 +528,7 @@ export default class ReminderController {
                 !user.task_options.repeat
             );
         else if (query.includes("month"))
-            calendar = await CalendarMaker.makeCalendar(
-                user.language,
-                year,
-                month
-            );
+            calendar = await CalendarMaker.makeCalendar(user.language, year, month);
         ctx.editMessageReplyMarkup(calendar.reply_markup);
     }
 
@@ -451,26 +553,29 @@ export default class ReminderController {
                 !user.task_options.repeat
             );
         else if (query.includes("month"))
-            calendar = await CalendarMaker.makeCalendar(
-                user.language,
-                year,
-                month
-            );
+            calendar = await CalendarMaker.makeCalendar(user.language, year, month);
 
         ctx.editMessageReplyMarkup(calendar.reply_markup);
     }
 
     // the function to process month input
-    // takes the context of the bot
     // runs when the user clicks on a month in the month grid
     public async processMonthCalendar(ctx: actionCtx) {
-        const date = this.getCallbackText(ctx).split("|")[2];
-
         const user = await User.findUser(ctx.callbackQuery.from.id);
+
+        if (
+            user.currently_doing !== "task.pattern.date" &&
+            user.currently_doing !== "task.repeat.pattern"
+        ) {
+            ctx.deleteMessage();
+            return;
+        }
+
+        const date = this.getCallbackText(ctx).split("|")[2];
 
         ls.setLocale(user.language);
         ctx.editMessageText(
-            ls.__("reminder.questions.calendar_1.text"),
+            ls.__("task.questions.calendar_1.text"),
             await CalendarMaker.makeCalendar(
                 user.language,
                 Number(date.split("-")[0]),
@@ -481,6 +586,11 @@ export default class ReminderController {
 
     public async processWeekDayInput(ctx: actionCtx) {
         const user = await User.findUser(ctx.callbackQuery.from.id);
+
+        if (user.currently_doing !== "task.repeat.pattern") {
+            ctx.deleteMessage();
+            return;
+        }
 
         const weekday = this.getCallbackText(ctx).split("|")[1];
 
@@ -499,15 +609,21 @@ export default class ReminderController {
 
     public async askForTime(ctx: actionCtx) {
         const user = await User.findUser(ctx.callbackQuery.from.id);
-        user.updateCurrentlyDoing("reminder.pattern.time");
+        user.updateCurrentlyDoing("task.pattern.time");
 
         ls.setLocale(user.language);
         ctx.deleteMessage();
-        ctx.replyWithMarkdownV2(ls.__("reminder.questions.send_time.single"));
+        ctx.replyWithMarkdownV2(ls.__("task.questions.send_time.single"));
     }
 
     public async processCalendarMultiselectInput(ctx: actionCtx) {
         const user = await User.findUser(ctx.callbackQuery.from.id);
+
+        if (user.currently_doing !== "task.pattern.date") {
+            ctx.deleteMessage();
+            return;
+        }
+
         const selected_day: string = this.getCallbackText(ctx).split("|")[1];
 
         user.toggleDaysSelection(selected_day);
@@ -520,22 +636,23 @@ export default class ReminderController {
         ctx.editMessageReplyMarkup(updatedMarkup.reply_markup);
     }
 
-    public async processMessage(
-        ctx: NarrowedContext<
-            Context<Update>,
-            Update.MessageUpdate<Record<"text", {}> & Message.TextMessage>
-        >
-    ) {
+    public async processMessage(ctx: textMessageCtx) {
         const user = await User.findUser(ctx.message.from.id);
-        if (user.currently_doing !== "reminder.name") {
+        if (
+            user.currently_doing !== "task.name" &&
+            user.currently_doing !== "task.pattern.time" &&
+            user.currently_doing !== "task.beforehand"
+        ) {
             return;
         }
-        user.updateTaskOptionProperty({
-            time: ctx.message.text,
-        });
 
-        ls.setLocale(user.language);
-        ctx.reply(ls.__("reminder.questions.send_time.success"));
+        if (user.currently_doing === "task.name") {
+            this.processNameInput(ctx);
+        } else if (user.currently_doing === "task.pattern.time") {
+            this.processTimeInput(ctx);
+        } else if (user.currently_doing === "task.beforehand") {
+            this.processBeforehandInput(ctx);
+        }
     }
 
     private getCallbackText(ctx: actionCtx | commandCtx | hearsCtx) {
