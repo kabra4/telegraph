@@ -107,17 +107,23 @@ export default class Task {
 
     public async createWithRepeatScheme(): Promise<void> {
         const data: TaskProperties = this.systemPropertiesRemover(this.data);
+        if (!this.repeat_scheme) {
+            return;
+        }
+        this.repeat_scheme.paramsToData();
         const repeatScheme: RepeatSchemeProperties =
-            this.repeat_scheme?.systemPropertiesRemover(this.repeat_scheme.data) || {};
+            this.repeat_scheme.systemPropertiesRemover(this.repeat_scheme.data) || {};
         try {
-            this.data = await this.handler.create({
+            const reqJson = {
                 data: {
                     ...data,
                     repeat_scheme: {
                         create: repeatScheme,
                     },
                 },
-            });
+            };
+            console.log(reqJson);
+            this.data = await this.handler.create(reqJson);
             this.setAttributes(this.data);
         } catch (err) {
             console.log(err);
@@ -135,7 +141,7 @@ export default class Task {
         const repeatScheme: RepeatSchemeProperties =
             this.repeat_scheme?.systemPropertiesRemover(this.repeat_scheme.data) || {};
         try {
-            this.data = await this.handler.create({
+            const reqJson = {
                 data: {
                     ...data,
                     repeat_scheme: {
@@ -145,7 +151,10 @@ export default class Task {
                         create: beforehandTask,
                     },
                 },
-            });
+            };
+            console.log(reqJson);
+
+            this.data = await this.handler.create(reqJson);
             this.setAttributes(this.data);
         } catch (err) {
             console.log(err);
@@ -203,11 +212,12 @@ export default class Task {
             name: this.name,
             action_type: this.action_type,
             is_beforehand: this.is_beforehand,
-            beforehand_owner_id: this.beforehand_owner_id,
-            chat_id: this.chat_id,
-            user_id: this.user_id,
-            group_id: this.group_id,
-            goal_id: this.goal_id,
+            beforehand_owner_id:
+                this.beforehand_owner_id === -1 ? null : this.beforehand_owner_id,
+            chat_id: this.chat_id === -1 ? null : this.chat_id,
+            user_id: this.user_id === -1 ? null : this.user_id,
+            group_id: this.group_id === -1 ? null : this.group_id,
+            goal_id: this.goal_id === -1 ? null : this.goal_id,
             trigger_timestamp: this.trigger_timestamp,
             last_triggered_timestamp: this.last_triggered_timestamp,
             trigger_count: this.trigger_count,
@@ -248,7 +258,7 @@ export default class Task {
 
     public async save(): Promise<void> {
         this.attributesToData();
-        if (this.id === 0) {
+        if (this.id === -1) {
             await this.create();
         } else {
             await this.update(this.systemPropertiesRemover(this.data));
@@ -278,28 +288,27 @@ export default class Task {
         return tasks.map((task) => Task.getTaskWithParams(task));
     }
 
-    public createBeforehandTask(beforehand_seconds: number): Task {
+    public createBeforehandTask(): Task {
         const task = new Task();
         task.is_beforehand = true;
-        task.beforehand_owner_id = this.id;
         task.chat_id = this.chat_id;
         task.user_id = this.user_id;
         task.group_id = this.group_id;
         task.last_triggered_timestamp = new Date("1970-01-01");
         task.trigger_count = this.trigger_count;
         task.max_trigger_count = this.max_trigger_count;
-        task.action_type = this.action_type;
+        task.action_type = "beforehand";
         task.has_beforehand_notification = false;
         task.beforehand_seconds = this.beforehand_seconds;
         task.content_text = this.content_text;
         task.name = this.name;
 
-        const beforehand_trigger_timestamp = TimeFunctions.dateMinusSeconds(
+        task.trigger_timestamp = TimeFunctions.dateMinusSeconds(
             this.trigger_timestamp,
-            beforehand_seconds
+            this.beforehand_seconds
         );
-        task.trigger_timestamp = beforehand_trigger_timestamp;
 
+        task.attributesToData();
         return task;
     }
 }

@@ -1,19 +1,22 @@
 import { prisma } from "../helpers/prismaClient";
-import { Chat as chatType } from "@prisma/client";
-import { chatProperties, SelectedTaskOptions } from "./types";
+import { Chat as ChatType } from "@prisma/client";
+import { ChatProperties, SelectedTaskOptions } from "./types";
 
 export default class Chat {
     public id: number;
+    public language: string = "ru";
+    public active: boolean = false;
     protected handler = prisma.chat;
 
     // the data of the chat
-    public data: chatType | null;
+    public data: ChatType | null;
 
     // the constructor of the chat
     // takes the id of the chat
     constructor(id?: number) {
         this.id = id || 0;
-        this.data = {} as chatType;
+        this.data = {} as ChatType;
+        this.active = false;
         if (this.id !== 0) {
             this.getData();
         }
@@ -28,6 +31,11 @@ export default class Chat {
                     id: this.id,
                 },
             });
+            if (this.data) {
+                this.id = this.data.id;
+                this.language = this.data.language || "ru";
+                this.active = this.data.active || false;
+            }
         } catch (err) {
             return;
         }
@@ -58,14 +66,24 @@ export default class Chat {
     // the function to create a new chat
     // takes the data of the chat
     // returns the data of the chat
-    public async create(id: number) {
+    public async create(
+        id: number,
+        language: string = "ru",
+        active: boolean = false
+    ): Promise<void> {
         try {
             this.data = await this.handler.create({
                 data: {
                     id,
+                    language,
+                    active,
                 },
             });
-            this.id = this.data.id;
+            if (this.data) {
+                this.id = this.data.id;
+                this.language = this.data.language || "ru";
+                this.active = this.data.active || false;
+            }
         } catch (err) {
             return;
         }
@@ -92,23 +110,42 @@ export default class Chat {
     }
 
     public async save(): Promise<void> {
+        await this.update({
+            language: this.language,
+        });
+    }
+
+    public async update(data: ChatProperties): Promise<void> {
         try {
             this.data = await this.handler.update({
                 where: {
                     id: this.id,
                 },
-                data: {
-                    ...this.systemPropertiesRemover(this.data),
-                },
+                data,
             });
+            if (this.data) {
+                this.id = this.data.id;
+                this.language = this.data.language || "ru";
+                this.active = this.data.active || false;
+            }
         } catch (err) {
             return;
         }
     }
 
-    private systemPropertiesRemover(data: chatType | null): chatProperties {
-        if (!data) return {} as chatProperties;
+    public async updateLanguage(language: string): Promise<void> {
+        await this.update({ language });
+        this.language = language;
+    }
+
+    public async updateActive(active: boolean): Promise<void> {
+        await this.update({ active });
+        this.active = active;
+    }
+
+    private systemPropertiesRemover(data: ChatType | null): ChatProperties {
+        if (!data) return {} as ChatProperties;
         const { id, createdAt, updatedAt, ...rest } = data;
-        return rest as chatProperties;
+        return rest as ChatProperties;
     }
 }

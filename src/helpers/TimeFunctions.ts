@@ -139,7 +139,7 @@ export default class TimeFunctions {
             return false;
         }
         const date = new Date(dateString);
-        const now = new Date();
+        const now = new Date(new Date().setHours(0, 0, 0, 0));
         return date > now;
     }
 
@@ -226,7 +226,7 @@ export default class TimeFunctions {
      */
     public static next_Date(month: number, day: number, time: string): Date {
         const now = new Date();
-        const [hour, minute] = time.split(":").map(Number);
+        const [hour, minute] = this.hourAndMinuteFromTimeStr(time);
 
         let nextDate = new Date(now.getFullYear(), month, day, hour, minute, 0, 0);
 
@@ -259,33 +259,66 @@ export default class TimeFunctions {
         return nextDate;
     }
 
+    public static yearMonthDayFromDateString(date: string): [number, number, number] {
+        if (!this.isValidDate(date)) {
+            return [0, 0, 0];
+        }
+        if (date.includes("-")) {
+            return date.split("-").map(Number) as [number, number, number];
+        } else if (date.includes(".")) {
+            return date.split(".").map(Number) as [number, number, number];
+        } else if (date.includes("/")) {
+            return date.split("/").map(Number) as [number, number, number];
+        } else {
+            return [0, 0, 0];
+        }
+    }
+
+    public static hourAndMinuteFromTimeStr(time: string): [number, number] {
+        if (!this.isValidTime(time)) {
+            return [0, 0];
+        }
+        if (time.includes(":")) {
+            return time.split(":").map(Number) as [number, number];
+        } else if (time.includes(".")) {
+            return time.split(".").map(Number) as [number, number];
+        } else if (time.includes(",")) {
+            return time.split(",").map(Number) as [number, number];
+        } else {
+            return [0, 0];
+        }
+    }
+
     /**
      * @param day: number 1-31
      * @param time: string "HH:MM"
      */
     public static next_day_of_month(day: number, time: string): Date {
+        const [hour, minute] = this.hourAndMinuteFromTimeStr(time);
         const now = new Date();
-        const [hour, minute] = time.split(":").map(Number);
+        let targetDate = new Date(now);
 
-        let nextDate = new Date(
-            now.getFullYear(),
-            now.getMonth(),
-            day,
-            hour,
-            minute,
-            0,
-            0
-        );
+        while (true) {
+            targetDate.setHours(hour, minute, 0, 0);
 
-        if (nextDate < now) {
-            const nextMonth = now.getMonth() + 1;
-            const nextYear = now.getFullYear() + (nextMonth > 11 ? 1 : 0);
-            const finalMonth = nextMonth > 11 ? 0 : nextMonth;
+            const daysInMonth = new Date(
+                targetDate.getFullYear(),
+                targetDate.getMonth() + 1,
+                0
+            ).getDate();
 
-            nextDate = new Date(nextYear, finalMonth, day, hour, minute, 0, 0);
+            if (day <= daysInMonth) {
+                targetDate.setDate(day);
+                if (targetDate > now) {
+                    break;
+                }
+            }
+
+            targetDate.setDate(1);
+            targetDate.setMonth(targetDate.getMonth() + 1);
         }
 
-        return nextDate;
+        return targetDate;
     }
 
     /**
@@ -353,6 +386,12 @@ export default class TimeFunctions {
     }
 
     public static dateMinusSeconds(date: Date, seconds: number): Date {
-        return new Date(date.getTime() - seconds * 1000);
+        const newDate = new Date(date);
+        newDate.setSeconds(date.getSeconds() - seconds);
+        return newDate;
+    }
+
+    public static daysInMonth(month: number, year: number): number {
+        return new Date(year, month + 1, 0).getDate();
     }
 }

@@ -143,7 +143,7 @@ export default class CalendarMaker {
             prevMonthText = "<-";
         }
         const today_button = this.cbText(
-            "TODAY",
+            "DATE",
             now.getFullYear(),
             (now.getMonth() + 1).toString().padStart(2, "0"),
             now.getDate(),
@@ -223,16 +223,11 @@ export default class CalendarMaker {
                 prevYearCallback = "IGNORE";
                 prevYearText = " ";
             } else {
-                prevYearCallback = this.cbText(
-                    "PREVyear",
-                    year - 1,
-                    "01",
-                    "01"
-                );
+                prevYearCallback = this.cbText("PREVyear", year - 1, "01", "01");
                 prevYearText = "<-";
             }
             const today_button = this.cbText(
-                "TODAY",
+                "DATE",
                 now.getFullYear(),
                 (now.getMonth() + 1).toString().padStart(2, "0"),
                 now.getDate()
@@ -253,10 +248,10 @@ export default class CalendarMaker {
                 "01"
             );
             const today_button = this.cbText(
-                "TODAY",
+                "DATE",
                 now.getFullYear(),
                 (now.getMonth() + 1).toString().padStart(2, "0"),
-                "01"
+                now.getDate()
             );
             navigationButtons.push(
                 Markup.button.callback(currentMonthName, thisMonth),
@@ -365,10 +360,7 @@ export default class CalendarMaker {
             ls.setLocale(locale_);
             keyboard[3].push(
                 // add Next button
-                Markup.button.callback(
-                    ls.__("buttons.next"),
-                    `calendarWeekdays|FINISH`
-                )
+                Markup.button.callback(ls.__("buttons.next"), `calendarWeekdays|FINISH`)
             );
         }
         return Markup.inlineKeyboard(keyboard);

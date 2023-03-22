@@ -184,7 +184,7 @@ export default class User {
     public should_ask_beforehand_time(): boolean {
         /* true when: task_options.repeat is true or
         (task_options.repeat is false and task_options.repeat_cycle === "yearly") */
-        return this.task_options.repeat || this.task_options.repeat_cycle === "yearly";
+        return !this.task_options.repeat || this.task_options.repeat_cycle === "yearly";
     }
 
     public async taskFromSelectedTaskOptions(chat_id: number): Promise<Task> {
@@ -194,13 +194,17 @@ export default class User {
         task.name = this.task_options.name || "";
         task.action_type = this.task_options.action_type || "task";
         task.has_beforehand_notification = this.task_options.has_beforehand || false;
+        task.beforehand_seconds = this.task_options.beforehand_time || 0;
 
-        const repeat_scheme = RepeatScheme.fromSelectedTaskOptions(this.task_options);
-        const nextTrigger = await repeat_scheme.getNextTrigger();
+        console.log(this.task_options);
+
+        task.repeat_scheme = RepeatScheme.fromSelectedTaskOptions(this.task_options);
+
+        const nextTrigger = await task.repeat_scheme.getNextTrigger();
         task.trigger_timestamp = nextTrigger;
 
         if (task.has_beforehand_notification) {
-            task.beforehand_task = task.createBeforehandTask(task.beforehand_seconds);
+            task.beforehand_task = task.createBeforehandTask();
         }
 
         return task;

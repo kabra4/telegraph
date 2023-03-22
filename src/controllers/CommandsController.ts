@@ -7,6 +7,7 @@ import { LocaleService } from "../helpers/LocaleService";
 import { languageCommand } from "../app";
 import { startCtx, helpCtx } from "../models/types";
 import User from "../models/User";
+import Chat from "../models/Chat";
 
 const ls = LocaleService.Instance;
 
@@ -33,6 +34,10 @@ export default class BasicCommandsController {
                 ctx.from.language_code
             );
             languageCommand.askLanguage(ctx.from.id, user.language);
+        }
+        let chat = await Chat.findChat(ctx.chat.id);
+        if (!chat.data) {
+            await chat.create(ctx.chat.id, ctx.from.language_code);
         }
     }
 

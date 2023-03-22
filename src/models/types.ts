@@ -26,9 +26,9 @@ type userProperties = {
     username?: string;
     phone_number?: number;
     language?: string;
+    active?: boolean;
     currently_doing?: string;
     task_options?: { [key: string]: any };
-    active?: boolean;
     superuser?: boolean;
 };
 
@@ -60,9 +60,10 @@ type RepeatSchemeProperties = {
     repeat_type?: string | null;
 };
 
-type chatProperties = {
+type ChatProperties = {
     name?: string;
     language?: string;
+    active?: boolean;
 };
 type SelectedTaskOptions = {
     name?: string;
@@ -202,7 +203,7 @@ export {
     hearsCtx,
     hearsRegexCtx,
     userProperties,
-    chatProperties,
+    ChatProperties,
     startCtx,
     helpCtx,
     textMessageCtx,

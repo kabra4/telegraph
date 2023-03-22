@@ -127,11 +127,27 @@ export default class RepeatScheme {
         return RepeatScheme.getRepeatSchemeWithParams(repeatScheme);
     }
 
+    public paramsToData(): RepeatSchemeType {
+        const data = {
+            id: this.id,
+            days_of_week: this.days_of_week,
+            days_of_month: this.days_of_month,
+            trigger_time: this.trigger_time,
+            trigger_date: this.trigger_date,
+            interval_minutes: this.interval_minutes,
+            tasks_id: this.tasks_id,
+            is_repeatable: this.is_repeatable,
+            repeat_type: this.repeat_type,
+        };
+        this.data = { ...this.data, ...data };
+        return data;
+    }
+
     public systemPropertiesRemover(
         data: RepeatSchemeType | null
     ): RepeatSchemeProperties {
         if (!data) return {} as RepeatSchemeProperties;
-        const { id, ...rest } = data;
+        const { id, tasks_id, ...rest } = data;
         return rest as RepeatSchemeProperties;
     }
 
@@ -181,9 +197,9 @@ export default class RepeatScheme {
 
     public async calculateOneTimeTriggerDate(): Promise<Date> {
         const date = new Date(this.trigger_date);
-        const time = this.trigger_time.split(":");
-        date.setHours(Number(time[0]));
-        date.setMinutes(Number(time[1]));
+        const time = TimeFunctions.hourAndMinuteFromTimeStr(this.trigger_time);
+        date.setHours(time[0]);
+        date.setMinutes(time[1]);
         return date;
     }
 
@@ -198,18 +214,24 @@ export default class RepeatScheme {
     }
 
     public async calculateMonthlyTriggerDate(): Promise<Date> {
-        const dates = this.days_of_month.map((days) =>
-            TimeFunctions.next_day_of_month(days, this.trigger_time)
-        );
-        const minDate = dates.reduce((min, current) => {
-            return current < min ? current : min;
-        }, dates[0]);
+        let minDate = new Date(Date.now() + 1000 * 60 * 60 * 24 * 31 * 1000);
+
+        for (const day of this.days_of_month) {
+            const date = TimeFunctions.next_day_of_month(day, this.trigger_time);
+
+            if (date < minDate) {
+                minDate = date;
+            }
+        }
+
         return minDate;
     }
 
     public async calculateYearlyTriggerDate(): Promise<Date> {
-        const [_, month, day] = this.trigger_date.split("-");
-        return TimeFunctions.next_Date(Number(month), Number(day), this.trigger_time);
+        const [_, month, day] = TimeFunctions.yearMonthDayFromDateString(
+            this.trigger_date
+        );
+        return TimeFunctions.next_Date(Number(month) - 1, Number(day), this.trigger_time);
     }
 
     public async calculateDailyTriggerDate(): Promise<Date> {

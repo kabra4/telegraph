@@ -157,7 +157,11 @@ export default class ReminderController {
         }
 
         if (beforehand_is_asked) {
-            user.updateCurrentlyDoing("task.beforehand_time");
+            await user.updateCurrentlyDoing("task.beforehand_time");
+            user.updateTaskOptionProperty({
+                has_beforehand: true,
+                beforehand_selected: true,
+            });
 
             ls.setLocale(user.language);
             ctx.editMessageText(
@@ -188,7 +192,11 @@ export default class ReminderController {
         }
     }
 
-    private async saveTask(ctx: actionCtx | textMessageCtx | hearsCtx, user: User) {
+    private async saveTask(
+        ctx: actionCtx | textMessageCtx | hearsCtx,
+        user: User,
+        deleteMessage = false
+    ) {
         let chat_id: number = 0;
         if (ctx.callbackQuery && ctx.callbackQuery.message) {
             chat_id = ctx.callbackQuery.message.chat.id;
@@ -202,6 +210,9 @@ export default class ReminderController {
 
         await user.resetReminderOptions();
 
+        if (deleteMessage) {
+            ctx.deleteMessage();
+        }
         ls.setLocale(user.language);
         ctx.reply(ls.__("task.created"));
     }
@@ -210,17 +221,20 @@ export default class ReminderController {
         if (!ctx.from) return;
         const user = await User.findUser(ctx.from.id);
 
-        if (user.currently_doing !== "task.beforehand_time") return;
+        if (user.currently_doing !== "task.beforehand_time") {
+            ctx.deleteMessage();
+            return;
+        }
+
         const inSeconds = TimeFunctions.calculateSecondsFromString(option);
 
         await user.updateTaskOptionProperty({
             beforehand_time: inSeconds,
             beforehand_selected: true,
         });
+        ctx.deleteMessage();
 
-        user.updateCurrentlyDoing("task_name");
-        ls.setLocale(user.language);
-        ctx.reply(ls.__("task.questions.task_name.text"));
+        this.askTaskName(ctx, user);
     }
 
     private async processBeforehandInput(ctx: hearsRegexCtx | textMessageCtx) {
@@ -234,13 +248,12 @@ export default class ReminderController {
         }
 
         const inSeconds = TimeFunctions.calculateSecondsFromString(ctx.message.text);
-        user.updateTaskOptionProperty({
+        await user.updateTaskOptionProperty({
             beforehand_time: inSeconds,
             beforehand_selected: true,
         });
-        user.updateCurrentlyDoing("task_name");
-        ls.setLocale(user.language);
-        ctx.reply(ls.__("task.questions.task_name.text"));
+
+        this.askTaskName(ctx, user);
     }
 
     // the function to process time message of the user
@@ -319,7 +332,7 @@ export default class ReminderController {
             name: "",
         });
 
-        this.saveTask(ctx, user);
+        this.saveTask(ctx, user, true);
     }
 
     // the function to process the "name" answer
@@ -371,6 +384,9 @@ export default class ReminderController {
         }
 
         await user.updateCurrentlyDoing("task.repeat.cycle");
+        user.updateTaskOptionProperty({
+            repeat: true,
+        });
         ls.setLocale(user.language);
         ctx.editMessageText(
             ls.__("task.questions.repeat.text"),
@@ -600,10 +616,25 @@ export default class ReminderController {
             user.language,
             user.task_options.checked_days
         );
+
         ctx.editMessageReplyMarkup(updatedMarkup.reply_markup);
     }
 
     public async processMultiselectCalendarFinish(ctx: actionCtx) {
+        const user = await User.findUser(ctx.callbackQuery.from.id);
+
+        if (
+            user.currently_doing !== "task.repeat.pattern" &&
+            user.currently_doing !== "task.pattern.date"
+        ) {
+            ctx.deleteMessage();
+            return;
+        }
+
+        user.updateTaskOptionProperty({
+            checked_days: user.task_options.checked_days,
+        });
+
         this.askForTime(ctx);
     }
 
@@ -619,7 +650,10 @@ export default class ReminderController {
     public async processCalendarMultiselectInput(ctx: actionCtx) {
         const user = await User.findUser(ctx.callbackQuery.from.id);
 
-        if (user.currently_doing !== "task.pattern.date") {
+        if (
+            user.currently_doing !== "task.pattern.date" &&
+            user.currently_doing !== "task.repeat.pattern"
+        ) {
             ctx.deleteMessage();
             return;
         }

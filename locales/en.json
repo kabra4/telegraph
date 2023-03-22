@@ -154,10 +154,14 @@
 				"invalid_date": "Invalid date",
 				"invalid_time": "Invalid time",
 				"date_in_past": "Date is in the past"
+			},
+			"task_name": {
+				"text": "Send the name of the task"
 			}
 		},
 		"reminder_set": "Reminder was successfully set to %s",
-		"reminder_has_not_set": "Reminder has not set"
+		"reminder_has_not_set": "Reminder has not set",
+		"created": "Task was successfully created"
 	},
 	"days": {
 		"today": "Today",
