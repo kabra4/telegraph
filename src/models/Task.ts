@@ -49,7 +49,7 @@ export default class Task {
     }
 
     public static getTaskWithParams(
-        data: taskType & { repeat_scheme?: RepeatSchemeType }
+        data: taskType & { repeat_scheme?: RepeatSchemeType | null }
     ): Task {
         const task = new Task();
         task.setAttributes(data);
@@ -281,10 +281,14 @@ export default class Task {
     public static async findTasks(where: SelectedTaskOptions): Promise<Task[] | null> {
         const tasks = await prisma.task.findMany({
             where,
+            include: {
+                repeat_scheme: true,
+            },
         });
         if (tasks.length === 0) {
             return null;
         }
+
         return tasks.map((task) => Task.getTaskWithParams(task));
     }
 
@@ -311,4 +315,39 @@ export default class Task {
         task.attributesToData();
         return task;
     }
+
+    public static async getTasksByChatId(chat_id: number): Promise<Task[] | null> {
+        const tasks = await prisma.task.findMany({
+            where: {
+                chat_id,
+                is_beforehand: false,
+            },
+            include: {
+                repeat_scheme: true,
+            },
+        });
+        return tasks.map((task) => Task.getTaskWithParams(task));
+    }
+
+    public static async getTasksByChatIdAndTriggerTimestampRange(
+        chat_id: number,
+        start: Date,
+        end: Date
+    ): Promise<Task[] | null> {
+        const tasks = await prisma.task.findMany({
+            where: {
+                chat_id,
+                trigger_timestamp: {
+                    gte: start,
+                    lte: end,
+                },
+            },
+            include: {
+                repeat_scheme: true,
+            },
+        });
+        return tasks.map((task) => Task.getTaskWithParams(task));
+    }
+
+    
 }

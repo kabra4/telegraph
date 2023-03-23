@@ -1,5 +1,6 @@
 // helpful class for parsing time strings
-//
+import { LocaleService } from "../helpers/LocaleService";
+const ls = LocaleService.Instance;
 
 export default class TimeFunctions {
     private static timelabels: { [key: string]: string[] } = {
@@ -393,5 +394,19 @@ export default class TimeFunctions {
 
     public static daysInMonth(month: number, year: number): number {
         return new Date(year, month + 1, 0).getDate();
+    }
+
+    public static formatDate(date: Date, language = "ru"): string {
+
+        const day = date.getDate();
+        const monthIndex = date.getMonth();
+        const year = date.getFullYear();
+        const hours = date.getHours();
+        const minutes = date.getMinutes().toString().padStart(2, "0");
+
+        ls.setLocale(language);
+        const monthString = ls.__("calendar.months_short." + monthIndex);
+      
+        return `${day} ${monthString} ${year}, ${hours}:${minutes}`;
     }
 }

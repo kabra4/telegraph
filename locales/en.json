@@ -29,7 +29,54 @@
 		"yes": "Yes",
 		"no": "No",
 		"select_all": "Select all",
-		"deselect_all": "Deselect all"
+		"deselect_all": "Deselect all",
+		"delete": "Delete"
+	},
+	"list": {
+		"empty": "List is empty",
+		"no_name": "No name"
+	},
+	"calendar": {
+		"months": {
+			"january": "January",
+			"february": "February",
+			"march": "March",
+			"april": "April",
+			"may": "May",
+			"june": "June",
+			"july": "July",
+			"august": "August",
+			"september": "September",
+			"october": "October",
+			"november": "November",
+			"december": "December"
+		},
+		"months_short": {
+			"0": "Jan",
+			"1": "Feb",
+			"2": "Mar",
+			"3": "Apr",
+			"4": "May",
+			"5": "Jun",
+			"6": "Jul",
+			"7": "Aug",
+			"8": "Sep",
+			"9": "Oct",
+			"10": "Nov",
+			"11": "Dec"
+		},
+		"weekdays": {
+			"monday": "Monday",
+			"tuesday": "Tuesday",
+			"wednesday": "Wednesday",
+			"thursday": "Thursday",
+			"friday": "Friday",
+			"saturday": "Saturday",
+			"sunday": "Sunday"
+		},
+		"weeklyCalendar": {
+			"title": "Weekly calendar"
+		}
 	},
 	"task": {
 		"calendar": {
