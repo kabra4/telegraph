@@ -4,6 +4,7 @@ import dotenv from "dotenv";
 import i18n from "./configs/i18n.config";
 import { LocaleService } from "./helpers/LocaleService";
 import BasicCommandController from "./controllers/CommandsController";
+import NotificationController from "./controllers/NotificationController";
 // import ActionController from "./controllers/ActionController";
 import LanguageCommand from "./commands/LanguageCommand";
 import TaskCommand from "./commands/TaskCommand";
@@ -23,6 +24,7 @@ export const commandController = new BasicCommandController(bot);
 export const languageCommand = new LanguageCommand(bot);
 export const listCommand = new ListCommand(bot);
 export const taskCommand = new TaskCommand(bot);
+export const notificationController = new NotificationController(bot);
 
 // bot.use(async (ctx, next) => {
 //     const chat_id = ctx.chat?.id;
@@ -50,7 +52,7 @@ console.log("Bot started");
 bot.command("quit", (ctx) => {
     // Explicit usage
     ctx.telegram.leaveChat(ctx.message.chat.id);
-    
+
     // Context shortcut
     ctx.leaveChat();
 });

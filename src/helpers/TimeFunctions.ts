@@ -414,4 +414,11 @@ export default class TimeFunctions {
 
         return `${day} ${monthString} ${year}, ${hours}:${minutes}`;
     }
+
+    public static nowWithZeroSeconds(): Date {
+        const now = new Date();
+        now.setSeconds(0);
+        now.setMilliseconds(0);
+        return now;
+    }
 }

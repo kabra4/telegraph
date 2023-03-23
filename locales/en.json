@@ -183,14 +183,14 @@
 				}
 			},
 			"has_it_beforehand": {
-				"text": "Do you want to set a task before the event?\nFor example, if you set a task for a birthday, you can set a task for a week before the birthday.",
+				"text": "Notification beforehand?",
 				"options": {
 					"yes": "Yes",
 					"no": "No"
 				}
 			},
 			"select_beforehand_time": {
-				"text": "Select how much time before the event should the task be set or send the time before the event.\nExample: 5 days\nsupported time units: minutes, hours, days, weeks",
+				"text": "Select how early to notify or send your own time.\nExample: 5 days\nsupported time units: minutes, hours, days, weeks",
 				"options": {
 					"10 minutes": "10 minutes",
 					"30 minutes": "30 minutes",

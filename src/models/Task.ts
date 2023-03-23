@@ -1,5 +1,9 @@
 import { prisma } from "../helpers/prismaClient";
-import { Task as taskType, RepeatScheme as RepeatSchemeType } from "@prisma/client";
+import {
+    Task as TaskType,
+    RepeatScheme as RepeatSchemeType,
+    User as UserType,
+} from "@prisma/client";
 import { TaskProperties, SelectedTaskOptions, RepeatSchemeProperties } from "./types";
 import RepeatSchemeModel from "./RepeatScheme";
 import TimeFunctions from "../helpers/TimeFunctions";
@@ -11,7 +15,7 @@ export default class Task {
 
     public handler = prisma.task;
 
-    public data: taskType | null;
+    public data: TaskType | null;
 
     public name: string = "";
     public action_type: string = "";
@@ -29,6 +33,7 @@ export default class Task {
     public has_beforehand_notification: boolean = false;
     public beforehand_seconds: number = 0;
     public content_text: string = "";
+    public user_data: UserType | null = null;
 
     public repeat_scheme: RepeatSchemeModel | null = null;
     public beforehand_task: Task | null = null;
@@ -36,7 +41,7 @@ export default class Task {
 
     constructor(id?: number) {
         this.id = id || -1;
-        this.data = {} as taskType;
+        this.data = {} as TaskType;
         if (this.id !== -1) {
             this.getData();
         }
@@ -74,7 +79,11 @@ export default class Task {
     }
 
     public static getTaskWithParams(
-        data: taskType & { repeat_scheme?: RepeatSchemeType | null }
+        data: TaskType & {
+            repeat_scheme?: RepeatSchemeType | null;
+            beforehand_task?: TaskType | null;
+            user_data?: UserType | null;
+        }
     ): Task {
         const task = new Task();
         task.setAttributes(data);
@@ -84,10 +93,16 @@ export default class Task {
                 data.repeat_scheme
             );
         }
+        if (data.beforehand_task) {
+            task.beforehand_task = Task.getTaskWithParams(data.beforehand_task);
+        }
+        if (data.user_data) {
+            task.user_data = data.user_data;
+        }
         return task;
     }
 
-    public setAttributes(data: taskType): void {
+    public setAttributes(data: TaskType): void {
         this.id = data.id;
         this.created_at = data.createdAt;
         this.updated_at = data.updatedAt;
@@ -148,7 +163,6 @@ export default class Task {
                     },
                 },
             };
-            console.log(reqJson);
             this.data = await this.handler.create(reqJson);
             this.setAttributes(this.data);
         } catch (err) {
@@ -178,8 +192,6 @@ export default class Task {
                     },
                 },
             };
-            console.log(reqJson);
-
             this.data = await this.handler.create(reqJson);
             this.setAttributes(this.data);
         } catch (err) {
@@ -293,7 +305,7 @@ export default class Task {
     }
 
     private systemPropertiesRemover(
-        data: taskType | null,
+        data: TaskType | null,
         remove_owner_id: boolean = false
     ): TaskProperties {
         if (!data) return {} as TaskProperties;
@@ -379,5 +391,21 @@ export default class Task {
     public async toggleActive(): Promise<void> {
         this.is_active = !this.is_active;
         await this.update({ is_active: this.is_active });
+    }
+
+    public static async getTasksByTriggerTimestampWithUser(
+        trigger_timestamp: Date
+    ): Promise<Task[] | null> {
+        const tasks = await prisma.task.findMany({
+            where: {
+                trigger_timestamp,
+            },
+            include: {
+                repeat_scheme: true,
+                beforehand_task: true,
+                user: true,
+            },
+        });
+        return tasks.map((task) => Task.getTaskWithParams(task));
     }
 }
