@@ -39,6 +39,7 @@ type TaskProperties = {
     chat_id?: number | null;
     user_id?: number | null;
     group_id?: number | null;
+    is_active?: boolean | null;
     trigger_timestamp?: Date | null;
     last_triggered_timestamp?: Date | null;
     trigger_count?: number | null;
@@ -71,6 +72,7 @@ type SelectedTaskOptions = {
     repeat_is_checked?: boolean;
     repeat_cycle?: string;
     repeat_pattern?: string;
+    chat_id?: number;
     date?: string;
     checked_days?: string[];
     time?: string;

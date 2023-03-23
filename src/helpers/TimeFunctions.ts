@@ -78,6 +78,12 @@ export default class TimeFunctions {
         ],
     };
 
+    public static getTomorrow(daysPlus = 1): Date {
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + daysPlus);
+        return tomorrow;
+    }
+
     private static timelabelFromUnit(unit: string): string {
         // loop through the timelabels
         for (const key in this.timelabels) {
@@ -397,7 +403,6 @@ export default class TimeFunctions {
     }
 
     public static formatDate(date: Date, language = "ru"): string {
-
         const day = date.getDate();
         const monthIndex = date.getMonth();
         const year = date.getFullYear();
@@ -406,7 +411,7 @@ export default class TimeFunctions {
 
         ls.setLocale(language);
         const monthString = ls.__("calendar.months_short." + monthIndex);
-      
+
         return `${day} ${monthString} ${year}, ${hours}:${minutes}`;
     }
 }

@@ -6,7 +6,8 @@ import { LocaleService } from "./helpers/LocaleService";
 import BasicCommandController from "./controllers/CommandsController";
 // import ActionController from "./controllers/ActionController";
 import LanguageCommand from "./commands/LanguageCommand";
-import ReminderCommand from "./commands/TaskCommand";
+import TaskCommand from "./commands/TaskCommand";
+import ListCommand from "./commands/ListCommand";
 import "./helpers/TimeFunctions";
 import User from "./models/User";
 import Chat from "./models/Chat";
@@ -20,35 +21,36 @@ const bot: Telegraf<Context<Update>> = new Telegraf(token);
 
 export const commandController = new BasicCommandController(bot);
 export const languageCommand = new LanguageCommand(bot);
-export const reminderCommand = new ReminderCommand(bot);
+export const listCommand = new ListCommand(bot);
+export const taskCommand = new TaskCommand(bot);
 
-bot.use(async (ctx, next) => {
-    const chat_id = ctx.chat?.id;
-    const user_id = ctx.from?.id;
-    if (chat_id && user_id) {
-        const chat = await Chat.findChat(chat_id);
-        const user = await User.findUser(user_id);
-        if (!chat.data && user.data) {
-            const chats_language = ctx.from.language_code;
-            await chat.create(chat_id, chats_language);
-            await user.create(
-                user_id,
-                ctx.from.first_name,
-                ctx.from.username,
-                ctx.from.last_name,
-                chats_language
-            );
-        }
-    }
-    await next(); // runs next middleware
-});
+// bot.use(async (ctx, next) => {
+//     const chat_id = ctx.chat?.id;
+//     const user_id = ctx.from?.id;
+//     if (chat_id && user_id) {
+//         const chat = await Chat.findChat(chat_id);
+//         const user = await User.findUser(user_id);
+//         if (!chat.data && user.data) {
+//             const chats_language = ctx.from.language_code;
+//             await chat.create(chat_id, chats_language);
+//             await user.create(
+//                 user_id,
+//                 ctx.from.first_name,
+//                 ctx.from.username,
+//                 ctx.from.last_name,
+//                 chats_language
+//             );
+//         }
+//     }
+//     await next(); // runs next middleware
+// });
 
 console.log("Bot started");
 
 bot.command("quit", (ctx) => {
     // Explicit usage
     ctx.telegram.leaveChat(ctx.message.chat.id);
-
+    
     // Context shortcut
     ctx.leaveChat();
 });

@@ -672,6 +672,9 @@ export default class ReminderController {
 
     public async processMessage(ctx: textMessageCtx) {
         const user = await User.findUser(ctx.message.from.id);
+        if (!user.currently_doing.includes("task")) {
+            return;
+        }
         if (
             user.currently_doing !== "task.name" &&
             user.currently_doing !== "task.pattern.time" &&

@@ -9,7 +9,7 @@ export default class Task {
     public created_at: Date = new Date();
     public updated_at: Date = new Date();
 
-    protected handler = prisma.task;
+    public handler = prisma.task;
 
     public data: taskType | null;
 
@@ -21,6 +21,7 @@ export default class Task {
     public user_id: number = -1;
     public group_id: number = -1;
     public goal_id: number = -1;
+    public is_active: boolean = true;
     public trigger_timestamp: Date = new Date();
     public last_triggered_timestamp: Date = new Date("1970-01-01");
     public trigger_count: number = 0;
@@ -46,6 +47,30 @@ export default class Task {
         task.id = id;
         await task.getData();
         return task;
+    }
+
+    public static doesTaskExist(id: number): Promise<boolean> {
+        return prisma.task
+            .findUnique({
+                where: {
+                    id: id,
+                },
+            })
+            .then((data) => {
+                return data !== null;
+            });
+    }
+
+    public static async deleteById(id: number): Promise<void> {
+        try {
+            await prisma.task.delete({
+                where: {
+                    id: id,
+                },
+            });
+        } catch (error) {
+            console.log(error);
+        }
     }
 
     public static getTaskWithParams(
@@ -75,6 +100,7 @@ export default class Task {
         this.trigger_timestamp = data.trigger_timestamp || new Date();
         this.last_triggered_timestamp =
             data.last_triggered_timestamp || new Date("1970-01-01");
+        this.is_active = data.is_active || false;
         this.trigger_count = data.trigger_count || 0;
         this.max_trigger_count = data.max_trigger_count || 0;
         this.action_type = data.action_type || "";
@@ -214,6 +240,7 @@ export default class Task {
             is_beforehand: this.is_beforehand,
             beforehand_owner_id:
                 this.beforehand_owner_id === -1 ? null : this.beforehand_owner_id,
+            is_active: this.is_active,
             chat_id: this.chat_id === -1 ? null : this.chat_id,
             user_id: this.user_id === -1 ? null : this.user_id,
             group_id: this.group_id === -1 ? null : this.group_id,
@@ -278,7 +305,7 @@ export default class Task {
         return rest as TaskProperties;
     }
 
-    public static async findTasks(where: SelectedTaskOptions): Promise<Task[] | null> {
+    public static async findTasks(where: any): Promise<Task[] | null> {
         const tasks = await prisma.task.findMany({
             where,
             include: {
@@ -349,5 +376,8 @@ export default class Task {
         return tasks.map((task) => Task.getTaskWithParams(task));
     }
 
-    
+    public async toggleActive(): Promise<void> {
+        this.is_active = !this.is_active;
+        await this.update({ is_active: this.is_active });
+    }
 }

@@ -30,11 +30,34 @@
 		"no": "No",
 		"select_all": "Select all",
 		"deselect_all": "Deselect all",
-		"delete": "Delete"
+		"delete": "Delete",
+		"deactivate": "Deactivate",
+		"activate": "Activate"
 	},
 	"list": {
 		"empty": "List is empty",
-		"no_name": "No name"
+		"no_name": "No name",
+		"repeatable": "Repeatable",
+		"not_repeatable": "One time",
+		"daily": "Every day",
+		"weekly": "Weekly",
+		"monthly": "Monthly",
+		"yearly": "Yearly",
+		"question": "Select how many tasks you want to see",
+		"options": {
+			"all": "All",
+			"today": "Today",
+			"tomorrow": "Tomorrow",
+			"week": "This week",
+			"month": "This month"
+		},
+		"no_tasks": "No tasks",
+		"task_deleted": "Task deleted",
+		"active": "Active",
+		"inactive": "Inactive"
+	},
+	"words": {
+		"days": "Days"
 	},
 	"calendar": {
 		"months": {
@@ -74,11 +97,21 @@
 			"saturday": "Saturday",
 			"sunday": "Sunday"
 		},
+		"weekdays_short": {
+			"0": "Mon",
+			"1": "Tue",
+			"2": "Wed",
+			"3": "Thu",
+			"4": "Fri",
+			"5": "Sat",
+			"6": "Sun"
+		},
 		"weeklyCalendar": {
 			"title": "Weekly calendar"
 		}
 	},
 	"task": {
+		"notification_on": "On",
 		"calendar": {
 			"months": {
 				"january": "January",
@@ -208,7 +241,11 @@
 		},
 		"reminder_set": "Reminder was successfully set to %s",
 		"reminder_has_not_set": "Reminder has not set",
-		"created": "Task was successfully created"
+		"created": "Task was successfully created",
+		"no_task_found": "No tasks found",
+		"active": "Active",
+		"inactive": "Inactive",
+		"task_deleted": "Task was successfully deleted"
 	},
 	"days": {
 		"today": "Today",

@@ -196,8 +196,6 @@ export default class User {
         task.has_beforehand_notification = this.task_options.has_beforehand || false;
         task.beforehand_seconds = this.task_options.beforehand_time || 0;
 
-        console.log(this.task_options);
-
         task.repeat_scheme = RepeatScheme.fromSelectedTaskOptions(this.task_options);
 
         const nextTrigger = await task.repeat_scheme.getNextTrigger();

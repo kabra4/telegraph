@@ -62,6 +62,7 @@ model Task {
   group_id            Int?
 
   repeat_scheme               RepeatScheme?
+  is_active                   Boolean?
   trigger_timestamp           DateTime?
   last_triggered_timestamp    DateTime?
   trigger_count               Int?
@@ -72,10 +73,10 @@ model Task {
   goal_id                     Int?
   content_text                String?
   beforehand_task             Task?         @relation("TaskOwner")
-  beforehand_owner            Task?         @relation("TaskOwner", fields: [beforehand_owner_id], references: [id])
-  chat                        Chat?         @relation(fields: [chat_id], references: [id])
-  user                        User?         @relation(fields: [user_id], references: [id])
-  group                       Group?        @relation(fields: [group_id], references: [id])
+  beforehand_owner            Task?         @relation("TaskOwner", fields: [beforehand_owner_id], references: [id], onDelete: Cascade)
+  chat                        Chat?         @relation(fields: [chat_id], references: [id], onDelete: Cascade)
+  user                        User?         @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  group                       Group?        @relation(fields: [group_id], references: [id], onDelete: Cascade)
   goal                        Goal?
 }
 
@@ -102,5 +103,5 @@ model RepeatScheme {
   trigger_date     String?
   interval_minutes Int?
   tasks_id         Int      @unique
-  tasks            Task?    @relation(fields: [tasks_id], references: [id])
+  tasks            Task?    @relation(fields: [tasks_id], references: [id], onDelete: Cascade)
 }
