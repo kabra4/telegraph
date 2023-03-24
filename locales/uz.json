@@ -1,22 +1,229 @@
 {
-    "start": "Bu start teksti o'zbek tilida",
+    "start": "Bu ingliz tilidagi salom matni",
+    "lang_on_start": "Agar ingliz tilida bo'lmasa, tilda o'zgartirish uchun /lang yozing",
     "help": {
-        "0": "Bu botning barcha buyruqlari",
-        "1": "/start - boshlash",
-        "2": "/help - yordam",
-        "3": "/lang - tilni tanlash",
-        "4": "/task - eslatma qo'shish"
+        "0": "Barcha buyruqlar",
+        "1": "/start - botni ishga tushurish",
+        "2": "/help - barcha buyruqlarni ko'rsatish",
+        "3": "/lang - tildan o'zgartirish",
+        "4": "/task - vazifa yaratish"
     },
     "lang": {
-        "name": "O'zbek",
-        "code": "uz",
-        "question": "Tilni tanlang",
+        "name": "Ingliz tili",
+        "code": "en",
+        "question": "Qaysi tildan foydalanmoqchi?",
         "options": {
             "en": "Ingliz tili",
             "ru": "Rus tili",
             "uz": "O'zbek tili"
         },
-        "language_changed": "Til o'zgartirildi",
+        "language_changed": "Til ingliz tiliga o'zgartirildi",
         "language_has_not_changed": "Til o'zgartirilmadi"
-    }
+    },
+    "buttons": {
+        "done": "Bajarildi",
+        "next": "Keyingi",
+        "back": "Orqaga",
+        "cancel": "Bekor qilish",
+        "skip": "O'tkazib yuborish",
+        "yes": "Ha",
+        "no": "Yo'q",
+        "select_all": "Hammasini tanlash",
+        "deselect_all": "Hech birini tanlanmagan qilish",
+        "delete": "O'chirish",
+        "deactivate": "Faolligini yo'q qilish",
+        "activate": "Faollashtirish"
+    },
+    "list": {
+        "empty": "Ro'yxat bo'sh",
+        "no_name": "Ism yo'q",
+        "repeatable": "Takrorlanuvchi",
+        "not_repeatable": "Bir marta",
+        "daily": "Har kuni",
+        "weekly": "Haftalik",
+        "monthly": "Oylik",
+        "yearly": "Yillik",
+        "question": "Ko'rsatiladigan vazifalar sonini tanlang",
+        "options": {
+            "all": "Hammasi",
+            "today": "Bugun",
+            "tomorrow": "Ertaga",
+            "week": "Bu hafta",
+            "month": "Bu oy"
+        },
+        "no_tasks": "Vazifalar yo'q",
+        "task_deleted": "Vazifa o'chirildi",
+        "active": "Faol",
+        "inactive": "Faolsiz"
+    },
+    "words": {
+        "days": "Kunlar",
+        "notification": "Bildirishnomalar"
+    },
+    "calendar": {
+        "months": {
+            "january": "Yanvar",
+            "february": "Fevral",
+            "march": "Mart",
+            "april": "Aprel",
+            "may": "May",
+            "june": "Iyun",
+            "july": "Iyul",
+            "august": "Avgust",
+            "september": "Sentabr",
+            "october": "Oktabr",
+            "november": "Noyabr",
+            "december": "Dekabr"
+        },
+        "months_short": {
+            "0": "Yan",
+            "1": "Fev",
+            "2": "Mar",
+            "3": "Apr",
+            "4": "May",
+            "5": "Iyun",
+            "6": "Iyul",
+            "7": "Avg",
+            "8": "Sen",
+            "9": "Okt",
+            "10": "Noya",
+            "11": "Dek"
+        },
+        "weekdays": {
+            "monday": "Dushanba",
+            "tuesday": "Seshanba",
+            "wednesday": "Chorshanba",
+            "thursday": "Payshanba",
+            "friday": "Juma",
+            "saturday": "Shanba",
+            "sunday": "Yakshanba"
+        },
+        "weekdays_short": {
+            "0": "Dush",
+            "1": "Sesh",
+            "2": "Chor",
+            "3": "Pay",
+            "4": "Jum",
+            "5": "Shan",
+            "6": "Yak"
+        },
+        "weeklyCalendar": {
+            "title": "Haftalik taqvim"
+        }
+    },
+    "task": {
+        "notification_on": "Yoqilgan",
+        "questions": {
+          "start": {
+            "text": "Agar vazifa * takrorlanganmi?\nTug'ilgan kunlar, yubileylari kabi voqealar takrorlanadi",
+            "options": {
+              "yes": "Ha",
+              "no": "Yo'q"
+            }
+          },
+          "repeat": {
+            "text": "Vazifani necha marta takrorlashi kerak?",
+            "options": {
+              "daily": "Har kuni",
+              "weekly": "Haftalik",
+              "monthly": "Oylik",
+              "yearly": "Har yili"
+            },
+            "weekly": {
+              "text": "Haftaning kuniga / kunini tanlang"
+            },
+            "monthly": {
+              "text": "Kunning kunini / kunini tanlang"
+            },
+            "daily": {
+              "text": "Vazifani * hh: mm * \\ sifatida yuboring.\nMasalan: 12:00 yoki 12 \\ .00"
+            }
+          },
+          "calendar_1": {
+            "text": "Vazifaning sanasini tanlang"
+          },
+          "send_time": {
+            "multiple": "Vazifani * hh: mm * \\ sifatida yuboring.\nMasalan: 12:00 yoki 12 \\ .00",
+            "single": "Vazifani * hh: mm * \\ sifatida yuboring.\nMasalan: 12:00 yoki 12 \\ .00"
+          },
+          "send_reminder_name": {
+            "text": "Vazifaning nomini yuboring"
+          },
+          "send_reminder_text": {
+            "text": "Vazifaning matnini yuboring",
+            "options": {
+              "skip": "O'tkazib yubormoq"
+            }
+          },
+          "has_it_beforehand": {
+            "text": "Oldindan ogohlantirishmi?",
+            "options": {
+              "yes": "Ha",
+              "no": "Yo'q"
+            }
+          },
+          "select_beforehand_time": {
+            "text": "O'zingizning vaqtingizni xabardor qilish yoki yuborish uchun qanday erta-ni tanlang.\nMasalan: 5 kun\nQo'llab-quvvatlanadigan vaqt birliklari: daqiqalar, soat, kunlar, hafta",
+            "options": {
+              "10 minutes": "10 daqiqa",
+              "30 minutes": "30 daqiqa",
+              "1 hour": "1 soat",
+              "1 day": "1 kun",
+              "2 days": "2 kun",
+              "3 days": "3 kun",
+              "1 week": "1 hafta",
+              "1 month": "1 oy",
+              "7 days": "7 kun",
+              "custom": "Odat"
+            }
+          },
+          "custom_beforehand_time": {
+            "text": "Tadbirdan oldin vaqtni yuboring.\nMasalan: 5 kun\nQo'llab-quvvatlanadigan vaqt birliklari: soat, kunlar, haftalar, oylar"
+          },
+          "calendar_month": {
+            "text": "Kun / vazifani tanlang\nSiz ularni bosish orqali bir yoki bir nechta kunni tanlashingiz mumkin",
+            "options": {
+              "deselect_all": "Barchasini bekor qiling",
+              "next": "Keyingisi"
+            }
+          },
+          "calendar_weekdays": {
+            "text": "Kun / vazifani tanlang\nSiz ularni bosish orqali bir yoki bir nechta kunni tanlashingiz mumkin",
+            "options": {
+              "deselect_all": "Barchasini bekor qiling",
+              "next": "Keyingisi"
+            }
+          },
+          "calendar_multiselect": {
+            "text": "Kun / vazifani tanlang\nSiz ularni bosish orqali bir yoki bir nechta kunni tanlashingiz mumkin"
+          },
+          "time": {
+            "text": "Vazifani * hh: mm * \\ sifatida yuboring.\nMasalan: 12:00 yoki 12 \\ .00"
+          },
+          "multiselect_calendar": {
+            "text": "Kun / vazifani tanlang\nSiz ularni bosish orqali bir yoki bir nechta kunni tanlashingiz mumkin"
+          },
+          "error": {
+            "invalid_date": "Noto'g'ri sana",
+            "invalid_time": "Vaqt noto'g'ri",
+            "date_in_past": "Sana o'tmishda"
+          },
+          "task_name": {
+            "text": "Vazifaning nomini yuboring"
+          }
+        },
+        "reminder_set": "Eslatma% s ga o'rnatildi",
+        "reminder_has_not_set": "Eslatma o'rnatilmagan",
+        "created": "Vazifa muvaffaqiyatli yaratildi",
+        "no_task_found": "Hech qanday vazifalar topilmadi",
+        "active": "Faol",
+        "inactive": "Faoliyatsiz",
+        "task_deleted": "Vazifa muvaffaqiyatli o'chirildi",
+        "no_name": "Ismi yo'q"
+      },
+      "days": {
+        "today": "Bugun",
+        "tomorrow": "Ertaga",
+        "yesterday": "Kecha"
+      }
 }

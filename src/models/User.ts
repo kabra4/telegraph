@@ -4,6 +4,9 @@ import { userProperties, SelectedTaskOptions, TaskProperties } from "./types";
 import RepeatScheme from "./RepeatScheme";
 import Task from "./Task";
 
+import { Logger } from "../helpers/Logger";
+const logger = Logger.getInstance();
+
 export default class User {
     public id: number;
     protected handler = prisma.user;
@@ -59,8 +62,9 @@ export default class User {
             });
             this.id = this.data.id;
             this.language = language;
+            logger.info(`User ${this.id} created`);
         } catch (err) {
-            return;
+            logger.error(err);
         }
     }
 
@@ -79,7 +83,7 @@ export default class User {
                 this.task_options = (this.data.task_options as SelectedTaskOptions) || {};
             }
         } catch (err) {
-            return;
+            logger.error(err);
         }
     }
 
@@ -101,8 +105,9 @@ export default class User {
                     id: this.id,
                 },
             });
+            logger.info(`User ${this.id} deleted`);
         } catch (err) {
-            return;
+            logger.error(err);
         }
     }
 
@@ -119,7 +124,7 @@ export default class User {
                 data,
             });
         } catch (err) {
-            return;
+            logger.error(err);
         }
     }
 
@@ -198,8 +203,7 @@ export default class User {
 
         task.repeat_scheme = RepeatScheme.fromSelectedTaskOptions(this.task_options);
 
-        const nextTrigger = await task.repeat_scheme.getNextTrigger();
-        task.trigger_timestamp = nextTrigger;
+        task.trigger_timestamp = await task.repeat_scheme.getNextTrigger();
 
         if (task.has_beforehand_notification) {
             task.beforehand_task = task.createBeforehandTask();

@@ -127,8 +127,5 @@ dist
 .pnp.*
 
 
-# pocketbase
-pb_data/
-pocketbase.exe
-
 bin/
+!logs/.gitkeep

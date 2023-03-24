@@ -175,7 +175,6 @@ export default class CalendarMaker {
         year: number = new Date().getFullYear(),
         isYearMatter: boolean = false
     ): Promise<Markup.Markup<InlineKeyboardMarkup>> {
-        console.log("makeMonthsGrid", locale_, year, isYearMatter);
         const now = new Date();
         const currentMonthName = now.toLocaleString(locale_, {
             month: "long",
@@ -302,7 +301,6 @@ export default class CalendarMaker {
         // first day of the week is Monday
         let firstDay = new Date(year, month - 1, 1).getDay() - 1;
         if (firstDay < 0) firstDay = 6;
-        // console.log("firstDay", firstDay);
         const daysInMonth = this.daysInMonth(month, year);
         let day = 1;
         for (let i = 0; i < 6; i++) {

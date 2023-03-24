@@ -3,10 +3,14 @@ import {
     Task as TaskType,
     RepeatScheme as RepeatSchemeType,
     User as UserType,
+    Chat as ChatType,
 } from "@prisma/client";
 import { TaskProperties, SelectedTaskOptions, RepeatSchemeProperties } from "./types";
 import RepeatSchemeModel from "./RepeatScheme";
 import TimeFunctions from "../helpers/TimeFunctions";
+
+import { Logger } from "../helpers/Logger";
+const logger = Logger.getInstance();
 
 export default class Task {
     public id: number;
@@ -33,7 +37,9 @@ export default class Task {
     public has_beforehand_notification: boolean = false;
     public beforehand_seconds: number = 0;
     public content_text: string = "";
+
     public user_data: UserType | null = null;
+    public chat_data: ChatType | null = null;
 
     public repeat_scheme: RepeatSchemeModel | null = null;
     public beforehand_task: Task | null = null;
@@ -74,7 +80,7 @@ export default class Task {
                 },
             });
         } catch (error) {
-            console.log(error);
+            logger.error(error);
         }
     }
 
@@ -83,6 +89,7 @@ export default class Task {
             repeat_scheme?: RepeatSchemeType | null;
             beforehand_task?: TaskType | null;
             user_data?: UserType | null;
+            chat_data?: ChatType | null;
         }
     ): Task {
         const task = new Task();
@@ -98,6 +105,9 @@ export default class Task {
         }
         if (data.user_data) {
             task.user_data = data.user_data;
+        }
+        if (data.chat_data) {
+            task.chat_data = data.chat_data;
         }
         return task;
     }
@@ -141,8 +151,11 @@ export default class Task {
                 data,
             });
             this.setAttributes(this.data);
+            logger.info(
+                `Task ${this.id}, name ${this.name} created,, chat: ${this.chat_id}, user: ${this.user_id}`
+            );
         } catch (err) {
-            console.log(err);
+            logger.error(err);
         }
     }
 
@@ -151,6 +164,7 @@ export default class Task {
         if (!this.repeat_scheme) {
             return;
         }
+
         this.repeat_scheme.paramsToData();
         const repeatScheme: RepeatSchemeProperties =
             this.repeat_scheme.systemPropertiesRemover(this.repeat_scheme.data) || {};
@@ -165,8 +179,11 @@ export default class Task {
             };
             this.data = await this.handler.create(reqJson);
             this.setAttributes(this.data);
+            logger.info(
+                `Task ${this.id} - ${this.name} created,, chat: ${this.chat_id}, user: {this.user_id}`
+            );
         } catch (err) {
-            console.log(err);
+            logger.error(err);
         }
     }
 
@@ -194,8 +211,11 @@ export default class Task {
             };
             this.data = await this.handler.create(reqJson);
             this.setAttributes(this.data);
+            logger.info(
+                `Task ${this.id} - ${this.name} created,, chat: ${this.chat_id}, user: {this.user_id}`
+            );
         } catch (err) {
-            console.log(err);
+            logger.error(err);
         }
     }
 
@@ -238,7 +258,7 @@ export default class Task {
                 }
             }
         } catch (err) {
-            console.log(err);
+            logger.error(err);
         }
     }
 
@@ -276,7 +296,7 @@ export default class Task {
                 data,
             });
         } catch (err) {
-            console.log(err);
+            logger.error(err);
         }
     }
 
@@ -290,8 +310,9 @@ export default class Task {
                     id: this.id,
                 },
             });
+            logger.info(`Task ${this.id} - ${this.name} deleted`);
         } catch (err) {
-            console.log(err);
+            logger.error(err);
         }
     }
 
@@ -393,7 +414,7 @@ export default class Task {
         await this.update({ is_active: this.is_active });
     }
 
-    public static async getTasksByTriggerTimestampWithUser(
+    public static async getTasksByTriggerTimestampWithChat(
         trigger_timestamp: Date
     ): Promise<Task[] | null> {
         const tasks = await prisma.task.findMany({
@@ -404,8 +425,28 @@ export default class Task {
                 repeat_scheme: true,
                 beforehand_task: true,
                 user: true,
+                chat: true,
             },
         });
         return tasks.map((task) => Task.getTaskWithParams(task));
+    }
+
+    public async recalculate(): Promise<void> {
+        if (this.repeat_scheme === null || this.is_active === false) {
+            return;
+        }
+
+        if (this.repeat_scheme.is_repeatable === false || this.is_beforehand === true) {
+            this.delete();
+            return;
+        }
+        this.last_triggered_timestamp = this.trigger_timestamp;
+        this.trigger_timestamp = await this.repeat_scheme.getNextTrigger();
+        this.trigger_count += 1;
+        if (this.has_beforehand_notification) {
+            this.beforehand_task = this.createBeforehandTask();
+            await this.beforehand_task.save();
+        }
+        await this.save();
     }
 }

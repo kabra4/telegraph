@@ -57,7 +57,8 @@
 		"inactive": "Inactive"
 	},
 	"words": {
-		"days": "Days"
+		"days": "Days",
+		"notification": "Notification"
 	},
 	"calendar": {
 		"months": {
@@ -112,34 +113,6 @@
 	},
 	"task": {
 		"notification_on": "On",
-		"calendar": {
-			"months": {
-				"january": "January",
-				"february": "February",
-				"march": "March",
-				"april": "April",
-				"may": "May",
-				"june": "June",
-				"july": "July",
-				"august": "August",
-				"september": "September",
-				"october": "October",
-				"november": "November",
-				"december": "December"
-			},
-			"weekdays": {
-				"monday": "Monday",
-				"tuesday": "Tuesday",
-				"wednesday": "Wednesday",
-				"thursday": "Thursday",
-				"friday": "Friday",
-				"saturday": "Saturday",
-				"sunday": "Sunday"
-			},
-			"weeklyCalendar": {
-				"title": "Weekly calendar"
-			}
-		},
 		"questions": {
 			"start": {
 				"text": "Should the task be *repeated*?\nEvents like birthdays, anniversaries are repeated",
@@ -225,10 +198,10 @@
 				"text": "Select day/days of the task\nYou can select one or more days by clicking on them"
 			},
 			"time": {
-				"text": "task.questions.time.text"
+				"text": "Send the time of the task as *HH:MM*\\.\nExample: 12:00 or 12\\.00"
 			},
 			"multiselect_calendar": {
-				"text": "task.questions.multiselect_calendar.text"
+				"text": "Select day/days of the task\nYou can select one or more days by clicking on them"
 			},
 			"error": {
 				"invalid_date": "Invalid date",
@@ -245,7 +218,8 @@
 		"no_task_found": "No tasks found",
 		"active": "Active",
 		"inactive": "Inactive",
-		"task_deleted": "Task was successfully deleted"
+		"task_deleted": "Task was successfully deleted",
+		"no_name": "No name"
 	},
 	"days": {
 		"today": "Today",

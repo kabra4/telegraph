@@ -337,7 +337,7 @@ export default class TimeFunctions {
         time: string // "HH:MM"
     ): Date {
         const now = new Date();
-        const [hour, minute] = time.split(":").map(Number);
+        const [hour, minute] = this.hourAndMinuteFromTimeStr(time);
 
         // Calculate the current day of the week (0 is Monday, 6 is Sunday)
         const currentDayOfWeek = (now.getDay() + 6) % 7;
@@ -371,7 +371,7 @@ export default class TimeFunctions {
         time: string // "HH:MM"
     ): Date {
         const now = new Date();
-        const [hour, minute] = time.split(":").map(Number);
+        const [hour, minute] = this.hourAndMinuteFromTimeStr(time);
 
         // Create the next date based on the current day and given time
         let nextDate = new Date(

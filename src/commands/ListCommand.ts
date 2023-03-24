@@ -7,6 +7,9 @@ import { commandCtx, actionCtx } from "../models/types";
 import User from "../models/User";
 import { callbackQuery } from "telegraf/filters";
 
+import { Logger } from "../helpers/Logger";
+const logger = Logger.getInstance();
+
 const ls = LocaleService.Instance;
 
 export default class ListCommand {
@@ -107,7 +110,6 @@ export default class ListCommand {
         const user = await User.findUser(ctx.callbackQuery.from.id);
 
         this.listTask(ctx, all_tasks, user.language);
-        console.log();
     }
 
     public async listToday(ctx: actionCtx): Promise<void> {
@@ -203,7 +205,7 @@ export default class ListCommand {
                 message += ls.__("list.weekly") + "\n" + ls.__("words.days") + ": _";
                 const checked_days = task.repeat_scheme.days_of_week.sort();
                 for (let i = 0; i < checked_days.length; i++) {
-                    message += ls.__("calendar.weekdays_short" + checked_days[i]) + " ";
+                    message += ls.__("calendar.weekdays_short." + checked_days[i]) + " ";
                 }
                 message += "_\n";
             } else if (repeatType === "monthly") {
@@ -240,6 +242,7 @@ export default class ListCommand {
             await Task.deleteById(task_id);
             ctx.replyWithMarkdownV2(ls.__("list.task_deleted"));
         }
+
         ctx.deleteMessage();
     }
 

@@ -440,7 +440,9 @@ export default class ReminderController {
             repeat_cycle: cycle,
         });
 
-        user.updateCurrentlyDoing("task.repeat.pattern");
+        if (cycle !== "daily") {
+            user.updateCurrentlyDoing("task.repeat.pattern");
+        }
 
         ls.setLocale(user.language);
         if (cycle === "yearly") {
@@ -459,8 +461,7 @@ export default class ReminderController {
                 await CalendarMaker.weekdaysMarkup(user.language)
             );
         } else if (cycle === "daily") {
-            ctx.deleteMessage();
-            ctx.replyWithMarkdownV2(ls.__("task.questions.repeat.daily.text"));
+            this.askForTime(ctx, user);
         }
     }
 
@@ -488,12 +489,11 @@ export default class ReminderController {
             return;
         }
 
-        user.updateTaskOptionProperty({
+        await user.updateTaskOptionProperty({
             date: date,
         });
-        user.updateCurrentlyDoing("task.pattern.time");
 
-        this.askForTime(ctx);
+        this.askForTime(ctx, user);
     }
 
     // the function to process the "calendar" navigation
@@ -638,12 +638,12 @@ export default class ReminderController {
         this.askForTime(ctx);
     }
 
-    public async askForTime(ctx: actionCtx) {
-        const user = await User.findUser(ctx.callbackQuery.from.id);
+    public async askForTime(ctx: actionCtx, _user?: User) {
+        const user = _user || (await User.findUser(ctx.callbackQuery.from.id));
         user.updateCurrentlyDoing("task.pattern.time");
 
-        ls.setLocale(user.language);
         ctx.deleteMessage();
+        ls.setLocale(user.language);
         ctx.replyWithMarkdownV2(ls.__("task.questions.send_time.single"));
     }
 

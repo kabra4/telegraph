@@ -210,6 +210,7 @@ export default class RepeatScheme {
         const minDate = dates.reduce((min, current) => {
             return current < min ? current : min;
         }, dates[0]);
+
         return minDate;
     }
 

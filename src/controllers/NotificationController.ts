@@ -6,6 +6,9 @@ import Task from "../models/Task";
 import User from "../models/User";
 import { commandCtx, actionCtx } from "../models/types";
 import { callbackQuery } from "telegraf/filters";
+import Chat from "../models/Chat";
+import { Logger } from "../helpers/Logger";
+const logger = Logger.getInstance();
 
 const ls = LocaleService.Instance;
 
@@ -13,11 +16,11 @@ export default class NotificationController {
     private bot: Telegraf<Context<Update>>;
 
     private interval = 60000;
+    private startTime = new Date();
 
     constructor(bot: Telegraf<Context<Update>>) {
         this.bot = bot;
         this.init();
-        console.log("Notification controller initialized");
     }
 
     private init(): void {
@@ -25,22 +28,44 @@ export default class NotificationController {
         let delay = this.interval - now.getSeconds() * 1000 - now.getMilliseconds();
         setTimeout(() => {
             this.sendNotifications();
-            setInterval(this.sendNotifications, this.interval);
+            setInterval(this.sendNotifications.bind(this), this.interval);
         }, delay);
     }
 
     public async sendNotifications(): Promise<void> {
+        this.startTime = new Date();
         const now = TimeFunctions.nowWithZeroSeconds();
-        const tasks = await Task.getTasksByTriggerTimestampWithUser(now);
-        if (!tasks) return;
+        const tasks = await Task.getTasksByTriggerTimestampWithChat(now);
+        if (!tasks || tasks.length === 0) return;
+
         for (const task of tasks) {
             const chat_id = task.chat_id;
-            const user = task.user_data || (await User.findUser(task.user_id));
-            const language = user.language || "ru";
+            const chat = task.chat_data || (await Chat.findChat(task.chat_id));
+            if (!chat) continue;
+            const language = chat.language || "ru";
 
-            // TODO: add notification text
+            const message = await NotificationController.taskToMessage(task, language);
 
-            this.bot.telegram.sendMessage(chat_id, "notification" + "\n" + task.name);
+            this.bot.telegram.sendMessage(chat_id, message);
         }
+        this.recalculateTasks(tasks);
+    }
+
+    public static async taskToMessage(task: Task, language: string): Promise<string> {
+        const text = task.name;
+        if (text === "") {
+            ls.setLocale(language);
+            return ls.__("words.notification") + "\n\n" + ls.__("task.no_name");
+        }
+        return text;
+    }
+
+    private recalculateTasks(tasks: Task[]): void {
+        for (const task of tasks) {
+            task.recalculate();
+        }
+        const endTime = new Date();
+        const time = endTime.getTime() - this.startTime.getTime();
+        logger.info(`Sent ${tasks.length} notifications in ${time} ms`);
     }
 }

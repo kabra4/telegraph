@@ -8,6 +8,10 @@ import { languageCommand } from "../app";
 import { startCtx, helpCtx } from "../models/types";
 import User from "../models/User";
 import Chat from "../models/Chat";
+import { commandCtx } from "../models/types";
+
+import { Logger } from "../helpers/Logger";
+const logger = Logger.getInstance();
 
 const ls = LocaleService.Instance;
 
@@ -18,6 +22,7 @@ export default class BasicCommandsController {
         this.bot = bot;
         this.bot.start((ctx) => this.start(ctx));
         this.bot.help((ctx) => this.help(ctx));
+        this.bot.command("cancel", (ctx) => this.cancel(ctx));
     }
 
     public async start(ctx: startCtx): Promise<void> {
@@ -33,11 +38,13 @@ export default class BasicCommandsController {
                 ctx.from.last_name,
                 ctx.from.language_code
             );
+            logger.info("New user: " + ctx.from.id);
             languageCommand.askLanguage(ctx.from.id, user.language);
         }
         let chat = await Chat.findChat(ctx.chat.id);
         if (!chat.data) {
             await chat.create(ctx.chat.id, ctx.from.language_code);
+            logger.info("New chat: " + ctx.chat.id);
         }
     }
 
@@ -50,5 +57,10 @@ export default class BasicCommandsController {
             reply_text += ls.__("help." + i.toString()) + "\n";
         }
         ctx.reply(reply_text);
+    }
+
+    public async cancel(ctx: commandCtx): Promise<void> {
+        const user = await User.findUser(ctx.from.id);
+        user.updateCurrentlyDoing("");
     }
 }
