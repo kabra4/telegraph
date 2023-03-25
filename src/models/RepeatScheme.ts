@@ -153,7 +153,10 @@ export default class RepeatScheme {
 
     public static fromSelectedTaskOptions(options: SelectedTaskOptions): RepeatScheme {
         const repeatScheme = new RepeatScheme();
-        repeatScheme.trigger_time = options.time || "";
+        const [hours, minutes] = TimeFunctions.hourAndMinuteFromTimeStr(
+            options.time || ""
+        );
+        repeatScheme.trigger_time = `${hours}:${minutes}`;
         repeatScheme.trigger_date = options.date || "";
         if (options.repeat) {
             repeatScheme.is_repeatable = true;
@@ -180,18 +183,16 @@ export default class RepeatScheme {
     public async getNextTrigger(): Promise<Date> {
         if (!this.is_repeatable) {
             return this.calculateOneTimeTriggerDate();
+        } else if (this.repeat_type === "weekly") {
+            return this.calculateWeeklyTriggerDate();
+        } else if (this.repeat_type === "monthly") {
+            return this.calculateMonthlyTriggerDate();
+        } else if (this.repeat_type === "yearly") {
+            return this.calculateYearlyTriggerDate();
+        } else if (this.repeat_type === "daily") {
+            return this.calculateDailyTriggerDate();
         } else {
-            if (this.repeat_type === "weekly") {
-                return this.calculateWeeklyTriggerDate();
-            } else if (this.repeat_type === "monthly") {
-                return this.calculateMonthlyTriggerDate();
-            } else if (this.repeat_type === "yearly") {
-                return this.calculateYearlyTriggerDate();
-            } else if (this.repeat_type === "daily") {
-                return this.calculateDailyTriggerDate();
-            } else {
-                return new Date();
-            }
+            return new Date();
         }
     }
 

@@ -53,7 +53,7 @@ export default class ListCommand {
         );
     }
 
-    public async listTask(
+    public async listTasks(
         ctx: actionCtx,
         tasks: Task[] | null,
         language = "ru"
@@ -109,7 +109,7 @@ export default class ListCommand {
 
         const user = await User.findUser(ctx.callbackQuery.from.id);
 
-        this.listTask(ctx, all_tasks, user.language);
+        this.listTasks(ctx, all_tasks, user.language);
     }
 
     public async listToday(ctx: actionCtx): Promise<void> {
@@ -123,10 +123,10 @@ export default class ListCommand {
         const today_tasks = await Task.getTasksByChatIdAndTriggerTimestampRange(
             chat_id,
             new Date(),
-            TimeFunctions.getTomorrow()
+            TimeFunctions.getTomorrow(1, true)
         );
 
-        this.listTask(ctx, today_tasks, "en");
+        this.listTasks(ctx, today_tasks, "en");
     }
 
     public async listTomorrow(ctx: actionCtx): Promise<void> {
@@ -139,11 +139,11 @@ export default class ListCommand {
 
         const tomorrow_tasks = await Task.getTasksByChatIdAndTriggerTimestampRange(
             chat_id,
-            TimeFunctions.getTomorrow(),
-            TimeFunctions.getTomorrow(2)
+            TimeFunctions.getTomorrow(1, true),
+            TimeFunctions.getTomorrow(2, true)
         );
 
-        this.listTask(ctx, tomorrow_tasks, "en");
+        this.listTasks(ctx, tomorrow_tasks, "en");
     }
 
     public async listWeek(ctx: actionCtx): Promise<void> {
@@ -160,7 +160,7 @@ export default class ListCommand {
             TimeFunctions.getTomorrow(7)
         );
 
-        this.listTask(ctx, week_tasks, "en");
+        this.listTasks(ctx, week_tasks, "en");
     }
 
     public async listMonth(ctx: actionCtx): Promise<void> {
@@ -177,7 +177,7 @@ export default class ListCommand {
             TimeFunctions.getTomorrow(30)
         );
 
-        this.listTask(ctx, month_tasks, "en");
+        this.listTasks(ctx, month_tasks, "en");
     }
 
     public static getTaskViewString(task: Task, language = "ru"): string {
@@ -200,7 +200,8 @@ export default class ListCommand {
         if (isRepeatable && task.repeat_scheme && task.repeat_scheme.repeat_type) {
             const repeatType = task.repeat_scheme.repeat_type;
             if (repeatType === "daily") {
-                message += ls.__("list.daily") + task.repeat_scheme.trigger_time + "\n";
+                message +=
+                    ls.__("list.daily") + ": " + task.repeat_scheme.trigger_time + "\n";
             } else if (repeatType === "weekly") {
                 message += ls.__("list.weekly") + "\n" + ls.__("words.days") + ": _";
                 const checked_days = task.repeat_scheme.days_of_week.sort();

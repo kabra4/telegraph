@@ -78,9 +78,12 @@ export default class TimeFunctions {
         ],
     };
 
-    public static getTomorrow(daysPlus = 1): Date {
+    public static getTomorrow(daysPlus = 1, resetHours = false): Date {
         const tomorrow = new Date();
         tomorrow.setDate(tomorrow.getDate() + daysPlus);
+        if (resetHours) {
+            tomorrow.setHours(0, 0, 0, 0);
+        }
         return tomorrow;
     }
 

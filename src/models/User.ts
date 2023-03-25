@@ -196,7 +196,9 @@ export default class User {
         const task = new Task();
         task.user_id = this.id;
         task.chat_id = chat_id;
-        task.name = this.task_options.name || "";
+        task.name = this.task_options.name
+            ? this.task_options.name.replace(".", "\\.")
+            : "";
         task.action_type = this.task_options.action_type || "task";
         task.has_beforehand_notification = this.task_options.has_beforehand || false;
         task.beforehand_seconds = this.task_options.beforehand_time || 0;
