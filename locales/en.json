@@ -1,5 +1,5 @@
 {
-	"start": "This is hello text in english",
+	"start": "Welcome to *Planner Guru*\\.\n\nThis bot will help you to remember important events and tasks\\.\n\nYou can create a task by typing /task\\.\n You can see all commands by typing /help\\.",
 	"lang_on_start": "Is your language English?\nIf not, type /lang to change language",
 	"help": {
 		"0": "This is all commands",

@@ -8,7 +8,6 @@
     "node": ">=18.0"
   },
   "scripts": {
-    "build": "tsc --build --clean",
     "ts-watch": "tsc -w",
     "nodemon": "nodemon --experimental-specifier-resolution=node dist/app.js",
     "start": "node --experimental-specifier-resolution=node dist/app.js",

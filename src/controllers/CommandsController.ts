@@ -26,25 +26,12 @@ export default class BasicCommandsController {
     }
 
     public async start(ctx: startCtx): Promise<void> {
-        let user = await User.findUser(ctx.from.id);
-        if (user.data) {
-            ls.setLocale(user.language);
-            ctx.reply(ls.__("start"));
-        } else {
-            await user.create(
-                ctx.from.id,
-                ctx.from.first_name,
-                ctx.from.username,
-                ctx.from.last_name,
-                ctx.from.language_code
-            );
-            logger.info("New user: " + ctx.from.id);
+        const { user, chat, newUser, newChat } = await this.checkUserAndChat(ctx);
+        ls.setLocale(user.language);
+        ctx.replyWithMarkdownV2(ls.__("start"));
+
+        if (newChat) {
             languageCommand.askLanguage(ctx.from.id, user.language);
-        }
-        let chat = await Chat.findChat(ctx.chat.id);
-        if (!chat.data) {
-            await chat.create(ctx.chat.id, ctx.from.language_code);
-            logger.info("New chat: " + ctx.chat.id);
         }
     }
 
@@ -62,5 +49,29 @@ export default class BasicCommandsController {
     public async cancel(ctx: commandCtx): Promise<void> {
         const user = await User.findUser(ctx.from.id);
         user.updateCurrentlyDoing("");
+    }
+
+    public async checkUserAndChat(
+        ctx: startCtx
+    ): Promise<{ user: User; chat: Chat; newUser: boolean; newChat: boolean }> {
+        let user = await User.findUser(ctx.from.id);
+        const newUser = user.data ? false : true;
+        if (newUser) {
+            await user.create(
+                ctx.from.id,
+                ctx.from.first_name,
+                ctx.from.username,
+                ctx.from.last_name,
+                ctx.from.language_code
+            );
+            logger.info("New user: " + ctx.from.id);
+        }
+        let chat = await Chat.findChat(ctx.chat.id);
+        const newChat = chat.data ? false : true;
+        if (newChat) {
+            await chat.create(ctx.chat.id, ctx.from.language_code, false, ctx.chat.type);
+            logger.info("New chat: " + ctx.chat.id);
+        }
+        return { user, chat, newUser, newChat };
     }
 }

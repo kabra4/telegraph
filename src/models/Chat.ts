@@ -6,6 +6,7 @@ export default class Chat {
     public id: number;
     public language: string = "ru";
     public active: boolean = false;
+    public type: string = "private";
     protected handler = prisma.chat;
 
     // the data of the chat
@@ -35,6 +36,7 @@ export default class Chat {
                 this.id = this.data.id;
                 this.language = this.data.language || "ru";
                 this.active = this.data.active || false;
+                this.type = this.data.type || "private";
             }
         } catch (err) {
             return;
@@ -45,6 +47,15 @@ export default class Chat {
     // returns the id of the chat
     public getId(): number {
         return this.id;
+    }
+
+    public dataToAttributes(): void {
+        if (this.data) {
+            this.id = this.data.id;
+            this.language = this.data.language || "ru";
+            this.active = this.data.active || false;
+            this.type = this.data.type || "private";
+        }
     }
 
     // the function to set the data of the chat
@@ -58,6 +69,7 @@ export default class Chat {
                 },
                 data,
             });
+            this.dataToAttributes();
         } catch (err) {
             return;
         }
@@ -69,7 +81,8 @@ export default class Chat {
     public async create(
         id: number,
         language: string = "ru",
-        active: boolean = false
+        active: boolean = false,
+        type: string = "private"
     ): Promise<void> {
         try {
             this.data = await this.handler.create({
@@ -77,12 +90,14 @@ export default class Chat {
                     id,
                     language,
                     active,
+                    type,
                 },
             });
             if (this.data) {
                 this.id = this.data.id;
                 this.language = this.data.language || "ru";
                 this.active = this.data.active || false;
+                this.type = this.data.type || "private";
             }
         } catch (err) {
             return;
@@ -127,6 +142,7 @@ export default class Chat {
                 this.id = this.data.id;
                 this.language = this.data.language || "ru";
                 this.active = this.data.active || false;
+                this.type = this.data.type || "private";
             }
         } catch (err) {
             return;

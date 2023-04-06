@@ -65,6 +65,7 @@ type ChatProperties = {
     name?: string;
     language?: string;
     active?: boolean;
+    type?: string;
 };
 type SelectedTaskOptions = {
     name?: string;

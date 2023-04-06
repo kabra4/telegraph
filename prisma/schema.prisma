@@ -11,17 +11,19 @@ datasource db {
 }
 
 model Chat {
-  id          Int       @id
+  id          Int        @id
   language    String?
   active      Boolean?
   last_active DateTime?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  type        String?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
   tasks       Task[]
+  feedbacks   Feedback[]
 }
 
 model User {
-  id              Int       @id
+  id              Int        @id
   name            String?
   last_name       String?
   username        String?
@@ -32,22 +34,11 @@ model User {
   currently_doing String?
   last_active     DateTime?
   superuser       Boolean?
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
   tasks           Task[]
-  goals           Goal[]
-}
-
-model Group {
-  id          Int       @id
-  username    String?
-  language    String?
-  admins      String[]
-  active      Boolean?
-  last_active DateTime?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  tasks       Task[]
+  goals           Hobby[]
+  feedbacks       Feedback[]
 }
 
 model Task {
@@ -76,21 +67,34 @@ model Task {
   beforehand_owner            Task?         @relation("TaskOwner", fields: [beforehand_owner_id], references: [id], onDelete: Cascade)
   chat                        Chat?         @relation(fields: [chat_id], references: [id], onDelete: Cascade)
   user                        User?         @relation(fields: [user_id], references: [id], onDelete: Cascade)
-  group                       Group?        @relation(fields: [group_id], references: [id], onDelete: Cascade)
-  goal                        Goal?
+  goal                        Hobby?
 }
 
-model Goal {
-  id            Int       @id @default(autoincrement())
-  user_id       Int?
-  name          String?
-  success_count Int?
-  total_count   Int?
-  streak_count  Int?
-  last_success  DateTime?
-  task_id       Int       @unique
-  user          User?     @relation(fields: [user_id], references: [id])
-  task          Task?     @relation(fields: [task_id], references: [id])
+model Hobby {
+  id         Int        @id @default(autoincrement())
+  user_id    Int
+  name       String     @default("")
+  task_id    Int        @unique
+  user       User?      @relation(fields: [user_id], references: [id])
+  task       Task?      @relation(fields: [task_id], references: [id])
+  hobby_logs HobbyLog[]
+}
+
+model HobbyLog {
+  id        Int      @id @default(autoincrement())
+  hobby_id  Int
+  response  String?
+  registerd DateTime @default(now())
+  hobby     Hobby?   @relation(fields: [hobby_id], references: [id], onDelete: Cascade)
+}
+
+model Feedback {
+  id      Int     @id @default(autoincrement())
+  user_id Int?
+  chat_id Int?
+  content String?
+  user    User?   @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  chat    Chat?   @relation(fields: [chat_id], references: [id], onDelete: Cascade)
 }
 
 model RepeatScheme {
@@ -101,6 +105,7 @@ model RepeatScheme {
   repeat_type      String?
   trigger_time     String?
   trigger_date     String?
+  custom_time      String[]
   interval_minutes Int?
   tasks_id         Int      @unique
   tasks            Task?    @relation(fields: [tasks_id], references: [id], onDelete: Cascade)

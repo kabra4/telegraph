@@ -1,0 +1,30 @@
+# draft
+
+# Use the official Node.js 18 image as the base image
+FROM node:18
+
+# Set working directory
+WORKDIR /app
+
+# Copy package.json and yarn.lock files to the working directory
+COPY package.json yarn.lock ./
+
+# Install Yarn globally and install dependencies
+RUN npm install -g yarn && yarn install
+
+# Copy the source code and Prisma schema to the working directory
+COPY src/ ./src/
+COPY prisma/ ./prisma/
+
+# Compile TypeScript code
+RUN yarn tsc
+
+# Expose the port that the app will run on
+EXPOSE 3000
+
+# Define environment variables
+ENV TELEGRAM_BOT_TOKEN your_bot_token
+ENV DATABASE_URL postgres://planner_guru:your_password@localhost:5432/planner_guru_db
+
+# Start the application
+CMD ["yarn", "start"]
