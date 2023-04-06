@@ -129,3 +129,4 @@ dist
 
 bin/
 !logs/.gitkeep
+node_modules.zip
