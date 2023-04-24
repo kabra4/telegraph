@@ -112,8 +112,17 @@ export default class TimeFunctions {
         }
 
         const reg =
-            /^((0?[0-9]|1[0-9]|2[0-3])[:\.]{1}[0-5][0-9])(,\s*(0?[0-9]|1[0-9]|2[0-3])[:\.]{1}[0-5][0-9])*$/;
+            /^((0?[0-9]|1[0-9]|2[0-3])[:\.]{1}[0-5][0-9])(,?\s*(0?[0-9]|1[0-9]|2[0-3])[:\.]{1}[0-5][0-9])*$/;
         return reg.test(time);
+    }
+
+    public static isValidTimePeriod(period: string): boolean {
+        // flatten the array of strings and join the strings with the pipe symbol
+        const pattern = Object.values(this.timelabels).flat().join("|");
+
+        // create the regular expression
+        const regex = new RegExp(`^\\d+\\s?(${pattern})$`, "i");
+        return regex.test(period);
     }
 
     /**
@@ -234,7 +243,13 @@ export default class TimeFunctions {
      * @example
      * const nextTimestamp = TimeFunctions.next_timestamp(3, 21, "00:00");
      */
-    public static next_Date(month: number, day: number, time: string): Date {
+    public static nextDate(month: number, day: number, time: string | string[]): Date {
+        if (Array.isArray(time)) {
+            return time
+                .map((t) => this.nextDate(month, day, t))
+                .reduce((a, b) => (a < b ? a : b));
+        }
+
         const now = new Date();
         const [hour, minute] = this.hourAndMinuteFromTimeStr(time);
 
@@ -301,9 +316,14 @@ export default class TimeFunctions {
 
     /**
      * @param day: number 1-31
-     * @param time: string "HH:MM"
+     * @param time: string | string[] "HH:MM"
      */
-    public static next_day_of_month(day: number, time: string): Date {
+    public static nextDayOfMonth(day: number, time: string | string[]): Date {
+        if (Array.isArray(time)) {
+            return time
+                .map((t) => this.nextDayOfMonth(day, t))
+                .reduce((a, b) => (a < b ? a : b));
+        }
         const [hour, minute] = this.hourAndMinuteFromTimeStr(time);
         const now = new Date();
         let targetDate = new Date(now);
@@ -333,12 +353,17 @@ export default class TimeFunctions {
 
     /**
      * @param day: number 0-6 (0 is Monday)
-     * @param time: string "HH:MM"
+     * @param time: string?[] "HH:MM"
      */
-    public static next_day_of_week(
+    public static nextDayOfWeek(
         day: number, // day of week 0-6 (0 is Monday)
-        time: string // "HH:MM"
+        time: string | string[] // "HH:MM"
     ): Date {
+        if (Array.isArray(time)) {
+            return time
+                .map((t) => this.nextDayOfWeek(day, t))
+                .reduce((a, b) => (a < b ? a : b));
+        }
         const now = new Date();
         const [hour, minute] = this.hourAndMinuteFromTimeStr(time);
 
@@ -370,9 +395,14 @@ export default class TimeFunctions {
      * @description returns the next timestamp
      * @returns Date
      */
-    public static next_Date_by_time(
-        time: string // "HH:MM"
+    public static nextDateByTime(
+        time: string | string[] // "HH:MM"
     ): Date {
+        if (Array.isArray(time)) {
+            return time
+                .map((t) => this.nextDateByTime(t))
+                .reduce((a, b) => (a < b ? a : b));
+        }
         const now = new Date();
         const [hour, minute] = this.hourAndMinuteFromTimeStr(time);
 

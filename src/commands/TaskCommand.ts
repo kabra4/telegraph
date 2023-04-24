@@ -6,9 +6,6 @@ import { callbackQuery, message } from "telegraf/filters";
 // import dotenv from "dotenv";
 import { LocaleService } from "../helpers/LocaleService";
 import User from "../models/User";
-import Task from "../models/Task";
-import RepeatScheme from "../models/RepeatScheme";
-import Chat from "../models/Chat";
 import CalendarMaker from "../helpers/CalendarMaker";
 import TimeFunctions from "../helpers/TimeFunctions";
 
@@ -25,7 +22,11 @@ const ls = LocaleService.Instance;
 export default class ReminderController {
     // the bot
     private bot: Telegraf<Context<Update>>;
-    private repeat_cycles: string[] = ["daily", "weekly", "monthly", "yearly"];
+    private repeat_cycles: string[][] = [
+        ["daily", "weekly"],
+        ["monthly", "yearly"],
+        ["interval"],
+    ];
     private beforehand_options: string[][] = [
         ["10 minutes", "30 minutes", "1 hour"],
         ["1 day", "3 days", "7 days"],
@@ -46,13 +47,13 @@ export default class ReminderController {
         this.bot.action("task.repeat.no", (ctx) => this.processRepeatNo(ctx));
 
         // receive "repeat cycle" answer
-        this.repeat_cycles.forEach((cycle) => {
-            this.bot.action("task.questions.repeat.options." + cycle, (ctx) =>
-                this.processRepeatCycleInput(ctx, cycle)
+        this.repeat_cycles.forEach((cycleList) => {
+            cycleList.forEach((cycle) =>
+                this.bot.action("task.questions.repeat.options." + cycle, (ctx) =>
+                    this.processRepeatCycleInput(ctx, cycle)
+                )
             );
         });
-
-        // this.bot.command("rmdrtest", (ctx) => this.test(ctx));
 
         // receive "date" answer
         this.bot.action(/calendar\|DATE\|\d{4}-\d{2}-\d{2}/, (ctx) =>
@@ -109,9 +110,10 @@ export default class ReminderController {
             this.processMultiselectCalendarFinish(ctx)
         );
 
-        this.bot.action("task.name.skip", (ctx) => this.processNameSkip(ctx));
-
-        this.bot.on(message("text"), (ctx) => this.processMessage(ctx));
+        // receive "interval_count" answer
+        this.bot.action(/^task.interval_count\|\d+$/, (ctx) =>
+            this.processIntervalCountInput(ctx)
+        );
     }
 
     // the function to handle the task command
@@ -119,15 +121,17 @@ export default class ReminderController {
         const hasArguments = ctx.message.text.split(" ").length > 1;
 
         if (!hasArguments) {
-            this.startTaskCreation(ctx);
+            this.askTaskName(ctx);
+        } else {
+            // TODO: implement task creation with arguments
+            this.askTaskName(ctx);
         }
     }
 
-    public async startTaskCreation(ctx: commandCtx): Promise<void> {
-        const user = await User.findUser(ctx.message.from.id);
+    public async startTaskCreation(ctx: commandCtx, user?: User): Promise<void> {
+        user ||= await User.findUser(ctx.message.from.id);
 
-        await user.updateCurrentlyDoing("task.repeat");
-        user.resetReminderOptions({ action_type: "task" });
+        user.updateCurrentlyDoing("task.repeat");
 
         ls.setLocale(user.language);
         ctx.replyWithMarkdownV2(
@@ -160,7 +164,6 @@ export default class ReminderController {
             await user.updateCurrentlyDoing("task.beforehand_time");
             user.updateTaskOptionProperty({
                 has_beforehand: true,
-                beforehand_selected: true,
             });
 
             ls.setLocale(user.language);
@@ -184,12 +187,21 @@ export default class ReminderController {
             await user.updateCurrentlyDoing("task_name");
             user.updateTaskOptionProperty({
                 has_beforehand: false,
-                beforehand_selected: true,
             });
 
-            ls.setLocale(user.language);
-            this.askTaskName(ctx, user);
+            this.saveTask(ctx, user);
         }
+    }
+
+    private getChatId(ctx: actionCtx | textMessageCtx | hearsCtx): number {
+        if (ctx.callbackQuery && ctx.callbackQuery.message) {
+            return ctx.callbackQuery.message.chat.id;
+        } else if (ctx.message) {
+            return ctx.message.chat.id;
+        } else if (ctx.chat) {
+            return ctx.chat.id;
+        }
+        return 0;
     }
 
     private async saveTask(
@@ -197,18 +209,12 @@ export default class ReminderController {
         user: User,
         deleteMessage = false
     ) {
-        let chat_id: number = 0;
-        if (ctx.callbackQuery && ctx.callbackQuery.message) {
-            chat_id = ctx.callbackQuery.message.chat.id;
-        } else if (ctx.message) {
-            chat_id = ctx.message.chat.id;
-        } else if (ctx.chat) {
-            chat_id = ctx.chat.id;
-        }
+        const chat_id = this.getChatId(ctx);
         const task = await user.taskFromSelectedTaskOptions(chat_id);
         await task.save();
 
         await user.resetReminderOptions();
+        await user.updateCurrentlyDoing("");
 
         if (deleteMessage) {
             ctx.deleteMessage();
@@ -217,9 +223,12 @@ export default class ReminderController {
         ctx.reply(ls.__("task.created"));
     }
 
-    private async processBeforehandTimeOption(ctx: actionCtx, option: string) {
-        if (!ctx.from) return;
-        const user = await User.findUser(ctx.from.id);
+    private async processBeforehandTimeOption(
+        ctx: actionCtx | textMessageCtx,
+        option: string,
+        user?: User
+    ) {
+        user ||= await this.userFromCtx(ctx);
 
         if (user.currently_doing !== "task.beforehand_time") {
             ctx.deleteMessage();
@@ -230,39 +239,28 @@ export default class ReminderController {
 
         await user.updateTaskOptionProperty({
             beforehand_time: inSeconds,
-            beforehand_selected: true,
         });
         ctx.deleteMessage();
-
-        this.askTaskName(ctx, user);
+        this.saveTask(ctx, user);
     }
 
-    private async processBeforehandInput(ctx: hearsRegexCtx | textMessageCtx) {
-        const user = await User.findUser(ctx.message.from.id);
-        if (user.currently_doing !== "task.beforehand_time.custom") return;
-
-        if (!TimeFunctions.isValidTime(ctx.message.text)) {
+    private async processBeforehandInput(
+        ctx: hearsRegexCtx | textMessageCtx,
+        user: User
+    ) {
+        if (!TimeFunctions.isValidTimePeriod(ctx.message.text)) {
             ls.setLocale(user.language);
             ctx.reply(ls.__("task.questions.custom_beforehand_time.invalid"));
             return;
         }
 
-        const inSeconds = TimeFunctions.calculateSecondsFromString(ctx.message.text);
-        await user.updateTaskOptionProperty({
-            beforehand_time: inSeconds,
-            beforehand_selected: true,
-        });
-
-        this.askTaskName(ctx, user);
+        this.processBeforehandTimeOption(ctx, ctx.message.text, user);
     }
 
     // the function to process time message of the user
     // takes the context of the message
     // returns nothing
-    protected async processTimeInput(ctx: hearsRegexCtx | textMessageCtx) {
-        const user = await User.findUser(ctx.message.from.id);
-        if (user.currently_doing !== "task.pattern.time") return;
-
+    protected async processTimeInput(ctx: hearsRegexCtx | textMessageCtx, user: User) {
         if (!TimeFunctions.isValidTime(ctx.message.text)) {
             ls.setLocale(user.language);
             ctx.reply(ls.__("task.questions.error.invalid_time"));
@@ -271,23 +269,18 @@ export default class ReminderController {
 
         const time = this.getTimesFromMessage(ctx.message.text);
 
-        if (time.length > 1) {
-            this.featureNotImplemented(ctx, user);
-            return;
-        }
-
         await user.updateTaskOptionProperty({
-            time: ctx.message.text,
+            time_list: time,
         });
 
         if (user.should_ask_beforehand_time()) {
-            this.askBeforehandTime(ctx, user);
+            this.askBeforehand(ctx, user);
         } else {
-            this.askTaskName(ctx, user);
+            this.saveTask(ctx, user);
         }
     }
 
-    public async askBeforehandTime(ctx: hearsRegexCtx | textMessageCtx, user: User) {
+    public async askBeforehand(ctx: hearsRegexCtx | textMessageCtx, user: User) {
         user.updateCurrentlyDoing("task.beforehand");
         ls.setLocale(user.language);
         ctx.reply(
@@ -307,47 +300,22 @@ export default class ReminderController {
 
     public async askTaskName(
         ctx: hearsRegexCtx | textMessageCtx | actionCtx,
-        user: User
+        user?: User
     ) {
+        user ||= await this.userFromCtx(ctx);
         user.updateCurrentlyDoing("task.name");
+        user.resetReminderOptions({ action_type: "task" });
         ls.setLocale(user.language);
-        ctx.reply(
-            ls.__("task.questions.task_name.text"),
-            Markup.inlineKeyboard([
-                Markup.button.callback(ls.__("buttons.skip"), "task.name.skip"),
-            ])
-        );
-    }
-
-    protected async processNameSkip(ctx: actionCtx) {
-        const user = await User.findUser(ctx.callbackQuery.from.id);
-
-        if (user.currently_doing !== "task.name") {
-            ctx.deleteMessage();
-            return;
-        }
-
-        user.updateCurrentlyDoing("");
-        user.updateTaskOptionProperty({
-            name: "",
-        });
-
-        this.saveTask(ctx, user, true);
+        ctx.reply(ls.__("task.questions.task_name.text"));
     }
 
     // the function to process the "name" answer
-    public async processNameInput(ctx: textMessageCtx) {
-        const user = await User.findUser(ctx.message.from.id);
-
-        if (user.currently_doing !== "task.name") return;
-
-        user.updateCurrentlyDoing("");
-
+    public async processNameInput(ctx: textMessageCtx, user: User) {
         user.updateTaskOptionProperty({
             name: ctx.message.text,
         });
 
-        this.saveTask(ctx, user);
+        this.startTaskCreation(ctx, user);
     }
 
     // says that the feature is not implemented
@@ -367,11 +335,7 @@ export default class ReminderController {
     // takes the message of the user with regex match: /^((0[0-9]|1[0-9]|2[0-3])[:\.]{1}[0-5][0-9])(,\s*(0[0-9]|1[0-9]|2[0-3])[:\.]{1}[0-5][0-9])*$/;
     // returns the list of times: string[]
     protected getTimesFromMessage(message: string): string[] {
-        return message.split(",").map((time) => time.trim());
-    }
-
-    protected async test(ctx: Context<Update>) {
-        ctx.reply("test", await CalendarMaker.makeMonthsGrid());
+        return message.split(/[\s,]+/).map((time) => time.trim());
     }
 
     // the fn if repeat is yes
@@ -390,16 +354,12 @@ export default class ReminderController {
         ls.setLocale(user.language);
         ctx.editMessageText(
             ls.__("task.questions.repeat.text"),
-
-            // this is the peak of my engeneering nonsense :D
             Markup.inlineKeyboard(
-                [0, 2].map((i) =>
-                    [i, i + 1].map((j) =>
+                this.repeat_cycles.map((cycleList) =>
+                    cycleList.map((cycle) =>
                         Markup.button.callback(
-                            ls.__(
-                                "task.questions.repeat.options." + this.repeat_cycles[j]
-                            ),
-                            "task.questions.repeat.options." + this.repeat_cycles[j]
+                            ls.__("task.questions.repeat.options." + cycle),
+                            "task.questions.repeat.options." + cycle
                         )
                     )
                 )
@@ -416,7 +376,6 @@ export default class ReminderController {
         await user.updateCurrentlyDoing("task.pattern.date");
         user.updateTaskOptionProperty({
             repeat: false,
-            repeat_is_checked: true,
         });
 
         const current_year = new Date().getFullYear();
@@ -440,7 +399,7 @@ export default class ReminderController {
             repeat_cycle: cycle,
         });
 
-        if (cycle !== "daily") {
+        if (cycle !== "daily" && cycle !== "interval") {
             user.updateCurrentlyDoing("task.repeat.pattern");
         }
 
@@ -461,8 +420,16 @@ export default class ReminderController {
                 await CalendarMaker.weekdaysMarkup(user.language)
             );
         } else if (cycle === "daily") {
-            this.askForTime(ctx, user);
+            this.askTime(ctx, user);
+        } else if (cycle === "interval") {
+            this.askIntervalTime(ctx, user);
         }
+    }
+
+    public async askIntervalTime(ctx: actionCtx, user: User): Promise<void> {
+        user.updateCurrentlyDoing("task.interval.time");
+        ls.setLocale(user.language);
+        ctx.reply(ls.__("task.questions.interval.time.text"));
     }
 
     // the function to process the "calendar" date input
@@ -493,7 +460,7 @@ export default class ReminderController {
             date: date,
         });
 
-        this.askForTime(ctx, user);
+        this.askTime(ctx, user);
     }
 
     // the function to process the "calendar" navigation
@@ -519,7 +486,7 @@ export default class ReminderController {
             });
             user.updateCurrentlyDoing("task.pattern.time");
 
-            this.askForTime(ctx);
+            this.askTime(ctx, user);
         }
     }
 
@@ -635,11 +602,11 @@ export default class ReminderController {
             checked_days: user.task_options.checked_days,
         });
 
-        this.askForTime(ctx);
+        this.askTime(ctx, user);
     }
 
-    public async askForTime(ctx: actionCtx, _user?: User) {
-        const user = _user || (await User.findUser(ctx.callbackQuery.from.id));
+    public async askTime(ctx: actionCtx, user?: User) {
+        user ||= await User.findUser(ctx.callbackQuery.from.id);
         user.updateCurrentlyDoing("task.pattern.time");
 
         ctx.deleteMessage();
@@ -670,26 +637,100 @@ export default class ReminderController {
         ctx.editMessageReplyMarkup(updatedMarkup.reply_markup);
     }
 
-    public async processMessage(ctx: textMessageCtx) {
-        const user = await User.findUser(ctx.message.from.id);
+    public async processMessage(ctx: textMessageCtx, user: User) {
         if (!user.currently_doing.includes("task")) {
-            return;
-        }
-        if (
-            user.currently_doing !== "task.name" &&
-            user.currently_doing !== "task.pattern.time" &&
-            user.currently_doing !== "task.beforehand"
-        ) {
             return;
         }
 
         if (user.currently_doing === "task.name") {
-            this.processNameInput(ctx);
+            this.processNameInput(ctx, user);
         } else if (user.currently_doing === "task.pattern.time") {
-            this.processTimeInput(ctx);
-        } else if (user.currently_doing === "task.beforehand") {
-            this.processBeforehandInput(ctx);
+            this.processTimeInput(ctx, user);
+        } else if (user.currently_doing === "task.beforehand_time") {
+            this.processBeforehandInput(ctx, user);
+        } else if (user.currently_doing === "task.interval.time") {
+            this.processIntervalTimeInput(ctx, user);
+        } else if (user.currently_doing === "task.interval.count") {
+            this.processIntervalCountInput(ctx, user);
         }
+    }
+
+    public async processIntervalTimeInput(
+        ctx: textMessageCtx,
+        user: User
+    ): Promise<void> {
+        if (!TimeFunctions.isValidTimePeriod(ctx.message.text)) {
+            ls.setLocale(user.language);
+            ctx.reply(ls.__("task.questions.interval.time.invalid"));
+            return;
+        }
+
+        const inSeconds = TimeFunctions.calculateSecondsFromString(ctx.message.text);
+        await user.updateTaskOptionProperty({
+            interval_seconds: inSeconds / 60,
+        });
+
+        this.askTaskIntervalCount(ctx, user);
+    }
+
+    public async userFromCtx(
+        ctx: textMessageCtx | actionCtx | hearsCtx | commandCtx
+    ): Promise<User> {
+        if (ctx.callbackQuery) {
+            return await User.findUser(ctx.callbackQuery.from.id);
+        } else if (ctx.message) {
+            return await User.findUser(ctx.message.from.id);
+        } else {
+            return await new User();
+        }
+    }
+
+    public async processIntervalCountInput(
+        ctx: textMessageCtx | actionCtx,
+        user?: User
+    ): Promise<void> {
+        user ||= await this.userFromCtx(ctx);
+
+        let response = ctx.message
+            ? ctx.message.text
+            : this.getCallbackText(ctx).split("|")[1];
+
+        if (!Number(response)) {
+            ls.setLocale(user.language);
+            ctx.reply(ls.__("task.questions.interval.count.invalid"));
+            return;
+        } else if (Number(response) < 1) {
+            ctx.reply(ls.__(`task.questions.interval.count.invalid`));
+            return;
+        }
+
+        user.updateTaskOptionProperty({
+            max_trigger_count: Number(response),
+        });
+
+        this.saveTask(ctx, user, true);
+    }
+
+    public async askTaskIntervalCount(ctx: textMessageCtx, user: User): Promise<void> {
+        user.updateCurrentlyDoing("task.interval.count");
+
+        ls.setLocale(user.language);
+        ctx.reply(
+            ls.__("task.questions.interval.count.text"),
+            Markup.inlineKeyboard([
+                [
+                    Markup.button.callback("5", "task.interval_count|5"),
+                    Markup.button.callback("10", "taks.interval_count|10"),
+                    Markup.button.callback("20", "task.interval_count|20"),
+                ],
+                [
+                    Markup.button.callback(
+                        ls.__("task.questions.interval.count.infinity"),
+                        "task.interval_count|100000"
+                    ),
+                ],
+            ])
+        );
     }
 
     private getCallbackText(ctx: actionCtx | commandCtx | hearsCtx) {

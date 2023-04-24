@@ -10,7 +10,10 @@ import RepeatSchemeModel from "./RepeatScheme";
 import TimeFunctions from "../helpers/TimeFunctions";
 
 import { Logger } from "../helpers/Logger";
+import { LocaleService } from "../helpers/LocaleService";
 const logger = Logger.getInstance();
+
+const ls = LocaleService.Instance;
 
 export default class Task {
     public id: number;
@@ -32,11 +35,12 @@ export default class Task {
     public is_active: boolean = true;
     public trigger_timestamp: Date = new Date();
     public last_triggered_timestamp: Date = new Date("1970-01-01");
-    public trigger_count: number = 0;
-    public max_trigger_count: number = 0;
     public has_beforehand_notification: boolean = false;
     public beforehand_seconds: number = 0;
     public content_text: string = "";
+
+    public trigger_count: number = 0;
+    public max_trigger_count: number = 0;
 
     public user_data: UserType | null = null;
     public chat_data: ChatType | null = null;
@@ -352,7 +356,7 @@ export default class Task {
         return tasks.map((task) => Task.getTaskWithParams(task));
     }
 
-    public createBeforehandTask(): Task {
+    public createBeforehandTask(): Task | null {
         const task = new Task();
         task.is_beforehand = true;
         task.chat_id = this.chat_id;
@@ -371,6 +375,9 @@ export default class Task {
             this.trigger_timestamp,
             this.beforehand_seconds
         );
+        if (task.trigger_timestamp < new Date()) {
+            return null;
+        }
 
         task.attributesToData();
         return task;
@@ -443,12 +450,62 @@ export default class Task {
         this.last_triggered_timestamp = this.trigger_timestamp;
         this.trigger_timestamp = await this.repeat_scheme.getNextTrigger();
         this.trigger_count += 1;
+        if (
+            this.max_trigger_count !== 0 &&
+            this.trigger_count >= this.max_trigger_count
+        ) {
+            this.is_active = false;
+        }
         if (this.has_beforehand_notification) {
-            this.beforehand_task = this.createBeforehandTask();
-            await this.beforehand_task.save();
+            this.createBeforehandTask()?.save();
         }
         await this.save();
     }
 
-    
+    public getViewString(language: string): string {
+        const triggerString = TimeFunctions.formatDate(this.trigger_timestamp, language);
+
+        ls.setLocale(language);
+        const isActiveString = this.is_active
+            ? ls.__("list.active")
+            : ls.__("list.inactive");
+        const name = this.name ? this.name : ls.__("list.no_name");
+        const isRepeatable = this.repeat_scheme
+            ? this.repeat_scheme.is_repeatable
+            : false;
+        const repeatString = isRepeatable
+            ? ls.__("list.repeatable")
+            : ls.__("list.not_repeatable");
+
+        let message = "*" + name + "*\n" + isActiveString + "\n" + repeatString + "\n";
+
+        if (isRepeatable && this.repeat_scheme && this.repeat_scheme.repeat_type) {
+            const repeatType = this.repeat_scheme.repeat_type;
+            if (repeatType === "daily") {
+                message +=
+                    ls.__("list.daily") + ": " + this.repeat_scheme.trigger_time + "\n";
+            } else if (repeatType === "weekly") {
+                message += ls.__("list.weekly") + "\n" + ls.__("words.days") + ": _";
+                const checked_days = this.repeat_scheme.days_of_week.sort();
+                for (let i = 0; i < checked_days.length; i++) {
+                    message += ls.__("calendar.weekdays_short." + checked_days[i]) + " ";
+                }
+                message += "_\n";
+            } else if (repeatType === "monthly") {
+                message += ls.__("list.monthly") + "\n" + ls.__("words.days") + ": _";
+                const checked_days = this.repeat_scheme.days_of_month;
+                for (let i = 0; i < checked_days.length; i++) {
+                    message += checked_days[i] + " ";
+                }
+                message += "_\n";
+            } else if (repeatType === "yearly") {
+                message += ls.__("list.yearly") + "\n";
+            } else if (repeatType === "interval") {
+                message += ls.__("list.interval") + "\n";
+            }
+        }
+
+        message += "\n" + ls.__("task.notification_on") + ": *" + triggerString + "*\n";
+        return message;
+    }
 }

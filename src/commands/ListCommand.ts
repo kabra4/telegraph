@@ -69,7 +69,7 @@ export default class ListCommand {
         for (let i = 0; i < tasks.length; i++) {
             const task = tasks[i];
 
-            const message = ListCommand.getTaskViewString(task, language);
+            const message = task.getViewString(language);
 
             let buttons = [];
             if (task.repeat_scheme?.is_repeatable) {
@@ -180,51 +180,6 @@ export default class ListCommand {
         this.listTasks(ctx, month_tasks, "en");
     }
 
-    public static getTaskViewString(task: Task, language = "ru"): string {
-        const triggerString = TimeFunctions.formatDate(task.trigger_timestamp, language);
-
-        ls.setLocale(language);
-        const isActiveString = task.is_active
-            ? ls.__("list.active")
-            : ls.__("list.inactive");
-        const name = task.name ? task.name : ls.__("list.no_name");
-        const isRepeatable = task.repeat_scheme
-            ? task.repeat_scheme.is_repeatable
-            : false;
-        const repeatString = isRepeatable
-            ? ls.__("list.repeatable")
-            : ls.__("list.not_repeatable");
-
-        let message = "*" + name + "*\n" + isActiveString + "\n" + repeatString + "\n";
-
-        if (isRepeatable && task.repeat_scheme && task.repeat_scheme.repeat_type) {
-            const repeatType = task.repeat_scheme.repeat_type;
-            if (repeatType === "daily") {
-                message +=
-                    ls.__("list.daily") + ": " + task.repeat_scheme.trigger_time + "\n";
-            } else if (repeatType === "weekly") {
-                message += ls.__("list.weekly") + "\n" + ls.__("words.days") + ": _";
-                const checked_days = task.repeat_scheme.days_of_week.sort();
-                for (let i = 0; i < checked_days.length; i++) {
-                    message += ls.__("calendar.weekdays_short." + checked_days[i]) + " ";
-                }
-                message += "_\n";
-            } else if (repeatType === "monthly") {
-                message += ls.__("list.monthly") + "\n" + ls.__("words.days") + ": _";
-                const checked_days = task.repeat_scheme.days_of_month;
-                for (let i = 0; i < checked_days.length; i++) {
-                    message += checked_days[i] + " ";
-                }
-                message += "_\n";
-            } else if (repeatType === "yearly") {
-                message += ls.__("list.yearly") + "\n";
-            }
-        }
-
-        message += "\n" + ls.__("task.notification_on") + ": *" + triggerString + "*\n";
-        return message;
-    }
-
     public async deleteTask(ctx: actionCtx): Promise<void> {
         const task_id = ctx.has(callbackQuery("data"))
             ? Number(ctx.callbackQuery.data.split(".")[2])
@@ -268,7 +223,7 @@ export default class ListCommand {
         await task.toggleActive();
 
         // edit message with markdownv2
-        const newMessage = ListCommand.getTaskViewString(task, user.language);
+        const newMessage = task.getViewString(user.language);
         const activationButton = Markup.button.callback(
             task.is_active ? ls.__("buttons.deactivate") : ls.__("buttons.activate"),
             task.is_active ? "deactivate.task." + task.id : "activate.task." + task.id

@@ -15,8 +15,9 @@ export default class RepeatScheme {
     public days_of_week: number[] = [];
     public days_of_month: number[] = [];
     public trigger_date: string = "";
-    public trigger_time: string = "";
-    public interval_minutes: number = 0;
+    public trigger_time: string[] = [];
+    public custom_time: string[] = [];
+    public interval_seconds: number = 0;
     public is_repeatable: boolean = false;
 
     constructor(id?: number) {
@@ -42,13 +43,14 @@ export default class RepeatScheme {
 
     public setProperties(data: RepeatSchemeType): void {
         this.id = data.id;
-        this.days_of_week = data.days_of_week || [];
-        this.days_of_month = data.days_of_month || [];
-        this.trigger_time = data.trigger_time || "";
-        this.interval_minutes = data.interval_minutes || 0;
+        this.days_of_week = data.days_of_week;
+        this.days_of_month = data.days_of_month;
+        this.trigger_time = data.trigger_time;
+        this.interval_seconds = data.interval_seconds || 0;
         this.tasks_id = data.tasks_id || -1;
         this.is_repeatable = data.is_repeatable || false;
         this.repeat_type = data.repeat_type || "";
+        this.custom_time = data.custom_time;
     }
 
     public async getData(): Promise<void> {
@@ -70,10 +72,11 @@ export default class RepeatScheme {
             days_of_month: this.days_of_month,
             trigger_time: this.trigger_time,
             trigger_date: this.trigger_date,
-            interval_minutes: this.interval_minutes,
+            interval_seconds: this.interval_seconds,
             tasks_id: this.tasks_id,
             is_repeatable: this.is_repeatable,
             repeat_type: this.repeat_type,
+            custom_time: this.custom_time,
         };
         return this.data;
     }
@@ -134,10 +137,11 @@ export default class RepeatScheme {
             days_of_month: this.days_of_month,
             trigger_time: this.trigger_time,
             trigger_date: this.trigger_date,
-            interval_minutes: this.interval_minutes,
+            interval_seconds: this.interval_seconds,
             tasks_id: this.tasks_id,
             is_repeatable: this.is_repeatable,
             repeat_type: this.repeat_type,
+            custom_time: this.custom_time,
         };
         this.data = { ...this.data, ...data };
         return data;
@@ -153,10 +157,11 @@ export default class RepeatScheme {
 
     public static fromSelectedTaskOptions(options: SelectedTaskOptions): RepeatScheme {
         const repeatScheme = new RepeatScheme();
-        const [hours, minutes] = TimeFunctions.hourAndMinuteFromTimeStr(
-            options.time || ""
+        options.time_list ||= [];
+        const hours_minutes = options.time_list.map((s) =>
+            TimeFunctions.hourAndMinuteFromTimeStr(s)
         );
-        repeatScheme.trigger_time = `${hours}:${minutes}`;
+        repeatScheme.trigger_time = hours_minutes.map((h, m) => `${h}:${m}`) || [];
         repeatScheme.trigger_date = options.date || "";
         if (options.repeat) {
             repeatScheme.is_repeatable = true;
@@ -170,7 +175,7 @@ export default class RepeatScheme {
                     options.checked_days || []
                 );
             } else if (options.repeat_cycle === "interval") {
-                repeatScheme.interval_minutes = Number(options.time);
+                repeatScheme.interval_seconds = Number(options.interval_seconds);
             }
         }
         return repeatScheme;
@@ -191,14 +196,22 @@ export default class RepeatScheme {
             return this.calculateYearlyTriggerDate();
         } else if (this.repeat_type === "daily") {
             return this.calculateDailyTriggerDate();
+        } else if (this.repeat_type === "interval") {
+            return this.calculateIntervalTriggerDate();
         } else {
             return new Date();
         }
     }
 
+    public async calculateIntervalTriggerDate(): Promise<Date> {
+        const date = new Date();
+        date.setSeconds(date.getSeconds() + this.interval_seconds);
+        return date;
+    }
+
     public async calculateOneTimeTriggerDate(): Promise<Date> {
         const date = new Date(this.trigger_date);
-        const time = TimeFunctions.hourAndMinuteFromTimeStr(this.trigger_time);
+        const time = TimeFunctions.hourAndMinuteFromTimeStr(this.trigger_time[0]);
         date.setHours(time[0]);
         date.setMinutes(time[1]);
         return date;
@@ -206,7 +219,7 @@ export default class RepeatScheme {
 
     public async calculateWeeklyTriggerDate(): Promise<Date> {
         const dates = this.days_of_week.map((days) =>
-            TimeFunctions.next_day_of_week(days, this.trigger_time)
+            TimeFunctions.nextDayOfWeek(days, this.trigger_time)
         );
         const minDate = dates.reduce((min, current) => {
             return current < min ? current : min;
@@ -219,7 +232,7 @@ export default class RepeatScheme {
         let minDate = new Date(Date.now() + 1000 * 60 * 60 * 24 * 31 * 1000);
 
         for (const day of this.days_of_month) {
-            const date = TimeFunctions.next_day_of_month(day, this.trigger_time);
+            const date = TimeFunctions.nextDayOfMonth(day, this.trigger_time);
 
             if (date < minDate) {
                 minDate = date;
@@ -233,10 +246,10 @@ export default class RepeatScheme {
         const [_, month, day] = TimeFunctions.yearMonthDayFromDateString(
             this.trigger_date
         );
-        return TimeFunctions.next_Date(Number(month) - 1, Number(day), this.trigger_time);
+        return TimeFunctions.nextDate(Number(month) - 1, Number(day), this.trigger_time);
     }
 
     public async calculateDailyTriggerDate(): Promise<Date> {
-        return TimeFunctions.next_Date_by_time(this.trigger_time);
+        return TimeFunctions.nextDateByTime(this.trigger_time);
     }
 }

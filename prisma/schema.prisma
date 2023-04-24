@@ -103,10 +103,10 @@ model RepeatScheme {
   days_of_month    Int[]
   is_repeatable    Boolean?
   repeat_type      String?
-  trigger_time     String?
+  trigger_time     String[]
   trigger_date     String?
   custom_time      String[]
-  interval_minutes Int?
+  interval_seconds Int?
   tasks_id         Int      @unique
   tasks            Task?    @relation(fields: [tasks_id], references: [id], onDelete: Cascade)
 }

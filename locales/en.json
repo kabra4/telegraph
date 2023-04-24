@@ -127,7 +127,8 @@
 					"daily": "Daily",
 					"weekly": "Weekly",
 					"monthly": "Monthly",
-					"yearly": "Yearly"
+					"yearly": "Yearly",
+					"interval": "Interval"
 				},
 				"weekly": {
 					"text": "Select day/days of the week"
@@ -178,7 +179,8 @@
 				}
 			},
 			"custom_beforehand_time": {
-				"text": "Send the time before the event.\nExample: 5 days\nsupported time units: hours, days, weeks, months"
+				"text": "Send the time before the event.\nExample: 5 days\nsupported time units: hours, days, weeks, months",
+				"invalid": "task.questions.custom_beforehand_time.invalid"
 			},
 			"calendar_month": {
 				"text": "Select day/days of the task\nYou can select one or more days by clicking on them",
@@ -210,6 +212,18 @@
 			},
 			"task_name": {
 				"text": "Send the name of the task"
+			},
+			"interval": {
+				"text": "Interval",
+				"time": {
+					"text": "Time to repeat like:\n5 days or 2 hours\ndays / hours / minute",
+					"invalid": "Send digit with word.\n5 days or 2 hours\ndays / hours / minute"
+				},
+				"count": {
+					"infinity": "Non-stop",
+					"text": "How often should the task be repeated?",
+					"invalid": "Send digit more than 0"
+				}
 			}
 		},
 		"reminder_set": "Reminder was successfully set to %s",

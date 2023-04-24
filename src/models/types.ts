@@ -54,7 +54,7 @@ type TaskProperties = {
 type RepeatSchemeProperties = {
     days_of_week?: number[];
     days_of_month?: number[];
-    trigger_time?: string | null;
+    trigger_time?: string[];
     interval_minutes?: number | null;
     tasks_id?: number;
     is_repeatable?: boolean | null;
@@ -68,20 +68,20 @@ type ChatProperties = {
     type?: string;
 };
 type SelectedTaskOptions = {
+    task_id?: number;
     name?: string;
     repeat?: boolean;
-    repeat_is_checked?: boolean;
     repeat_cycle?: string;
     repeat_pattern?: string;
     chat_id?: number;
     date?: string;
     checked_days?: string[];
-    time?: string;
     time_list?: string[];
+    interval_seconds?: number;
     action_type?: string;
-    beforehand_selected?: boolean;
     has_beforehand?: boolean;
     beforehand_time?: number;
+    max_trigger_count?: number;
 };
 
 type GroupData = {
