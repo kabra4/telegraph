@@ -1,6 +1,6 @@
 import User from "../models/User";
 import Task from "../models/Task";
-import { SelectedTaskOptions } from "../models/types";
+import { UserSelectedOptions } from "../models/types";
 
 export async function createUser(
     id: number,

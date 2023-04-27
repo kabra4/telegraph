@@ -36,6 +36,25 @@ export default class HobbyLog {
         }
     }
 
+    public static async logHobbyAnswer(
+        hobbyId: number,
+        response: string
+    ): Promise<HobbyLog | null> {
+        try {
+            const hobbyLog = await prisma.hobbyLog.create({
+                data: {
+                    hobby_id: hobbyId,
+                    response: response,
+                },
+            });
+            const hobbyLogModel = new HobbyLog();
+            hobbyLogModel.dataToAttributes(hobbyLog);
+            return hobbyLogModel;
+        } catch (err) {
+            return null;
+        }
+    }
+
     // the function to get the id of the hobbyLog
     // returns the id of the hobbyLog
     public getId(): number {
@@ -46,7 +65,7 @@ export default class HobbyLog {
         if (data) {
             this.id = data.id;
             this.hobbyId = data.hobby_id;
-            this.registered = data.registerd;
+            this.registered = data.registered;
             this.response = data.response;
         }
     }
@@ -63,7 +82,7 @@ export default class HobbyLog {
             this.data = await this.handler.create({
                 data: {
                     hobby_id: hobbyId,
-                    registerd: registered,
+                    registered: registered,
                     response: response,
                 },
             });
@@ -82,7 +101,7 @@ export default class HobbyLog {
             const hobbyLog = await prisma.hobbyLog.create({
                 data: {
                     hobby_id: hobbyId,
-                    registerd: registered,
+                    registered: registered,
                     response: response,
                 },
             });

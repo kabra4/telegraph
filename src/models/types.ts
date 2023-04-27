@@ -14,7 +14,7 @@ type TgUserData = {
     phone_number: string;
     language: string;
     active: boolean;
-    reminder_options: SelectedTaskOptions;
+    reminder_options: UserSelectedOptions;
     superuser: boolean;
     last_active: Date;
     is_currently_doing: string;
@@ -39,6 +39,7 @@ type TaskProperties = {
     chat_id?: number | null;
     user_id?: number | null;
     group_id?: number | null;
+    hobby_id?: number | null;
     is_active?: boolean | null;
     trigger_timestamp?: Date | null;
     last_triggered_timestamp?: Date | null;
@@ -47,7 +48,6 @@ type TaskProperties = {
     action_type?: string | null;
     has_beforehand_notification?: boolean | null;
     beforehand_seconds?: number | null;
-    goal_id?: number | null;
     content_text?: string | null;
 };
 
@@ -67,13 +67,14 @@ type ChatProperties = {
     active?: boolean;
     type?: string;
 };
-type SelectedTaskOptions = {
+type UserSelectedOptions = {
     task_id?: number;
     name?: string;
     repeat?: boolean;
     repeat_cycle?: string;
     repeat_pattern?: string;
     chat_id?: number;
+    hobby_id?: number;
     date?: string;
     checked_days?: string[];
     time_list?: string[];
@@ -82,6 +83,14 @@ type SelectedTaskOptions = {
     has_beforehand?: boolean;
     beforehand_time?: number;
     max_trigger_count?: number;
+
+    hobby_answers?: string[];
+};
+
+type HobbyProperties = {
+    name?: string;
+    user_id?: number;
+    answers?: string[];
 };
 
 type GroupData = {
@@ -124,7 +133,6 @@ type ReminderData = {
     updated: string | undefined;
     beforehand_reminder_owner_id: string;
     name: string;
-    group_id: string;
     user_id: string;
     is_repeatable: true;
     repeat_scheme_id: string;
@@ -140,7 +148,7 @@ type ReminderData = {
         | "get_goal_status";
     has_beforehand_notification: true;
     beforehand_seconds: number;
-    goal_id: string;
+    hobby_id: string;
     content: string;
 };
 
@@ -200,7 +208,7 @@ export {
     GoalData,
     RepeatSchemeData,
     ReminderData,
-    SelectedTaskOptions,
+    UserSelectedOptions,
     commandCtx,
     actionCtx,
     hearsCtx,
@@ -212,4 +220,5 @@ export {
     textMessageCtx,
     TaskProperties,
     RepeatSchemeProperties,
+    HobbyProperties,
 };

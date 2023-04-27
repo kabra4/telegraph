@@ -4,13 +4,20 @@ import {
     RepeatScheme as RepeatSchemeType,
     User as UserType,
     Chat as ChatType,
+    Hobby as HobbyType,
 } from "@prisma/client";
-import { TaskProperties, SelectedTaskOptions, RepeatSchemeProperties } from "./types";
+import {
+    TaskProperties,
+    UserSelectedOptions,
+    RepeatSchemeProperties,
+    HobbyProperties,
+} from "./types";
 import RepeatSchemeModel from "./RepeatScheme";
 import TimeFunctions from "../helpers/TimeFunctions";
 
 import { Logger } from "../helpers/Logger";
 import { LocaleService } from "../helpers/LocaleService";
+import Hobby from "./Hobby";
 const logger = Logger.getInstance();
 
 const ls = LocaleService.Instance;
@@ -31,7 +38,7 @@ export default class Task {
     public chat_id: number = -1;
     public user_id: number = -1;
     public group_id: number = -1;
-    public goal_id: number = -1;
+    public hobby_id: number = -1;
     public is_active: boolean = true;
     public trigger_timestamp: Date = new Date();
     public last_triggered_timestamp: Date = new Date("1970-01-01");
@@ -44,10 +51,12 @@ export default class Task {
 
     public user_data: UserType | null = null;
     public chat_data: ChatType | null = null;
+    public hobby_data: HobbyType | null = null;
 
     public repeat_scheme: RepeatSchemeModel | null = null;
     public beforehand_task: Task | null = null;
     public beforehand_owner: Task | null = null;
+    public hobby: Hobby | null = null;
 
     constructor(id?: number) {
         this.id = id || -1;
@@ -92,8 +101,9 @@ export default class Task {
         data: TaskType & {
             repeat_scheme?: RepeatSchemeType | null;
             beforehand_task?: TaskType | null;
-            user_data?: UserType | null;
-            chat_data?: ChatType | null;
+            user?: UserType | null;
+            chat?: ChatType | null;
+            hobby?: HobbyType | null;
         }
     ): Task {
         const task = new Task();
@@ -107,11 +117,14 @@ export default class Task {
         if (data.beforehand_task) {
             task.beforehand_task = Task.getTaskWithParams(data.beforehand_task);
         }
-        if (data.user_data) {
-            task.user_data = data.user_data;
+        if (data.user) {
+            task.user_data = data.user;
         }
-        if (data.chat_data) {
-            task.chat_data = data.chat_data;
+        if (data.chat) {
+            task.chat_data = data.chat;
+        }
+        if (data.hobby) {
+            task.hobby_data = data.hobby;
         }
         return task;
     }
@@ -126,6 +139,7 @@ export default class Task {
         this.chat_id = data.chat_id || -1;
         this.user_id = data.user_id || -1;
         this.group_id = data.group_id || -1;
+        this.hobby_id = data.hobby_id || -1;
         this.trigger_timestamp = data.trigger_timestamp || new Date();
         this.last_triggered_timestamp =
             data.last_triggered_timestamp || new Date("1970-01-01");
@@ -141,7 +155,10 @@ export default class Task {
     }
 
     public async create(): Promise<void> {
-        if (this.beforehand_task) {
+        if (this.hobby) {
+            await this.createWithHobby();
+            return;
+        } else if (this.beforehand_task) {
             await this.createWithBeforehandTask();
             return;
         } else if (this.repeat_scheme) {
@@ -191,6 +208,62 @@ export default class Task {
         }
     }
 
+    public async createWithHobby(): Promise<void> {
+        let data: TaskProperties = this.systemPropertiesRemover(this.data);
+        if (!this.repeat_scheme || !this.hobby) {
+            return;
+        }
+        const { hobby_id, ...taskData } = data;
+
+        this.repeat_scheme.paramsToData();
+        const repeatScheme: RepeatSchemeProperties =
+            this.repeat_scheme.systemPropertiesRemover(this.repeat_scheme.data) || {};
+
+        const hobbyData = {
+            name: this.hobby.name,
+            user_id: this.hobby.user_id,
+            answers: this.hobby.answers,
+        };
+
+        try {
+            const returnData = await prisma.hobby.create({
+                data: {
+                    ...hobbyData,
+                    task: {
+                        create: {
+                            ...taskData,
+                            repeat_scheme: {
+                                create: repeatScheme,
+                            },
+                        },
+                    },
+                },
+                select: {
+                    id: true,
+                    name: true,
+                    user_id: true,
+                    answers: true,
+                    task: {
+                        include: {
+                            repeat_scheme: true,
+                        },
+                    },
+                },
+            });
+            let { id, name, user_id, answers, task } = returnData;
+            if (!task || !task.repeat_scheme) {
+                return;
+            }
+
+            this.setAttributes(task);
+            logger.info(
+                `Task ${this.id} - ${this.name} created, chat: ${this.chat_id}, hobby: ${id}`
+            );
+        } catch (err) {
+            logger.error(err);
+        }
+    }
+
     public async createWithBeforehandTask(): Promise<void> {
         const data: TaskProperties = this.systemPropertiesRemover(this.data);
         if (!this.beforehand_task) {
@@ -216,7 +289,7 @@ export default class Task {
             this.data = await this.handler.create(reqJson);
             this.setAttributes(this.data);
             logger.info(
-                `Task ${this.id} - ${this.name} created,, chat: ${this.chat_id}, user: {this.user_id}`
+                `Task ${this.id} - ${this.name} created, chat: ${this.chat_id}, user: ${this.user_id}`
             );
         } catch (err) {
             logger.error(err);
@@ -280,7 +353,7 @@ export default class Task {
             chat_id: this.chat_id === -1 ? null : this.chat_id,
             user_id: this.user_id === -1 ? null : this.user_id,
             group_id: this.group_id === -1 ? null : this.group_id,
-            goal_id: this.goal_id === -1 ? null : this.goal_id,
+            hobby_id: this.hobby_id === -1 ? null : this.hobby_id,
             trigger_timestamp: this.trigger_timestamp,
             last_triggered_timestamp: this.last_triggered_timestamp,
             trigger_count: this.trigger_count,
@@ -362,6 +435,7 @@ export default class Task {
         task.chat_id = this.chat_id;
         task.user_id = this.user_id;
         task.group_id = this.group_id;
+        task.hobby_id = this.hobby_id;
         task.last_triggered_timestamp = new Date("1970-01-01");
         task.trigger_count = this.trigger_count;
         task.max_trigger_count = this.max_trigger_count;
@@ -391,6 +465,9 @@ export default class Task {
             },
             include: {
                 repeat_scheme: true,
+                chat: true,
+                hobby: true,
+                user: true,
             },
         });
         return tasks.map((task) => Task.getTaskWithParams(task));
@@ -411,6 +488,9 @@ export default class Task {
             },
             include: {
                 repeat_scheme: true,
+                chat: true,
+                hobby: true,
+                user: true,
             },
         });
         return tasks.map((task) => Task.getTaskWithParams(task));
@@ -433,9 +513,16 @@ export default class Task {
                 beforehand_task: true,
                 user: true,
                 chat: true,
+                hobby: true,
             },
         });
         return tasks.map((task) => Task.getTaskWithParams(task));
+    }
+
+    public updateTriggerTimestamp(timestamp: Date): void {
+        const zeroSecond = TimeFunctions.withZeroSeconds(timestamp);
+        this.update({ trigger_timestamp: zeroSecond });
+        this.trigger_timestamp = zeroSecond;
     }
 
     public async recalculate(): Promise<void> {
@@ -507,5 +594,13 @@ export default class Task {
 
         message += "\n" + ls.__("task.notification_on") + ": *" + triggerString + "*\n";
         return message;
+    }
+
+    public static async countUserTasks(user_id: number): Promise<number> {
+        return await prisma.task.count({
+            where: {
+                user_id,
+            },
+        });
     }
 }

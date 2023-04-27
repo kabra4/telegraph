@@ -51,6 +51,7 @@ model Task {
   chat_id             Int?
   user_id             Int?
   group_id            Int?
+  hobby_id            Int?     @unique
 
   repeat_scheme               RepeatScheme?
   is_active                   Boolean?
@@ -61,31 +62,30 @@ model Task {
   action_type                 String?
   has_beforehand_notification Boolean?
   beforehand_seconds          Int?
-  goal_id                     Int?
   content_text                String?
   beforehand_task             Task?         @relation("TaskOwner")
   beforehand_owner            Task?         @relation("TaskOwner", fields: [beforehand_owner_id], references: [id], onDelete: Cascade)
   chat                        Chat?         @relation(fields: [chat_id], references: [id], onDelete: Cascade)
   user                        User?         @relation(fields: [user_id], references: [id], onDelete: Cascade)
-  goal                        Hobby?
+  hobby                       Hobby?        @relation(fields: [hobby_id], references: [id], onDelete: Cascade)
 }
 
 model Hobby {
   id         Int        @id @default(autoincrement())
   user_id    Int
   name       String     @default("")
-  task_id    Int        @unique
+  answers    String[]
   user       User?      @relation(fields: [user_id], references: [id])
-  task       Task?      @relation(fields: [task_id], references: [id])
+  task       Task?
   hobby_logs HobbyLog[]
 }
 
 model HobbyLog {
-  id        Int      @id @default(autoincrement())
-  hobby_id  Int
-  response  String?
-  registerd DateTime @default(now())
-  hobby     Hobby?   @relation(fields: [hobby_id], references: [id], onDelete: Cascade)
+  id         Int      @id @default(autoincrement())
+  hobby_id   Int
+  response   String?
+  registered DateTime @default(now())
+  hobby      Hobby?   @relation(fields: [hobby_id], references: [id], onDelete: Cascade)
 }
 
 model Feedback {

@@ -1,10 +1,11 @@
 import { prisma } from "../helpers/prismaClient";
 import { User as userType } from "@prisma/client";
-import { userProperties, SelectedTaskOptions, TaskProperties } from "./types";
+import { userProperties, UserSelectedOptions, TaskProperties } from "./types";
 import RepeatScheme from "./RepeatScheme";
 import Task from "./Task";
 
 import { Logger } from "../helpers/Logger";
+import Hobby from "./Hobby";
 const logger = Logger.getInstance();
 
 export default class User {
@@ -17,7 +18,7 @@ export default class User {
     public language: string = "ru";
     public currently_doing: string = "";
 
-    public task_options: SelectedTaskOptions = {};
+    public task_options: UserSelectedOptions = {};
 
     // the constructor of the user
     // takes the id of the user
@@ -26,7 +27,7 @@ export default class User {
         this.data = {} as userType;
         if (this.id !== 0) {
             this.getData();
-            this.task_options = this.data.task_options as SelectedTaskOptions;
+            this.task_options = this.data.task_options as UserSelectedOptions;
         }
     }
 
@@ -80,7 +81,7 @@ export default class User {
             if (this.data) {
                 this.language = this.data.language || "ru";
                 this.currently_doing = this.data.currently_doing || "";
-                this.task_options = (this.data.task_options as SelectedTaskOptions) || {};
+                this.task_options = (this.data.task_options as UserSelectedOptions) || {};
             }
         } catch (err) {
             logger.error(err);
@@ -111,7 +112,7 @@ export default class User {
         }
     }
 
-    public getTaskOptions(): SelectedTaskOptions {
+    public getTaskOptions(): UserSelectedOptions {
         return this.task_options;
     }
 
@@ -131,7 +132,7 @@ export default class User {
     // the function to set the task options of the user
     // takes the task options of the user
     // returns the task options of the user
-    public async updateTaskOptionProperty(property: SelectedTaskOptions): Promise<void> {
+    public async updateTaskOptionProperty(property: UserSelectedOptions): Promise<void> {
         this.task_options = {
             ...this.task_options,
             ...property,
@@ -139,7 +140,7 @@ export default class User {
         await this.update({ task_options: this.task_options });
     }
 
-    public async resetReminderOptions(options?: SelectedTaskOptions): Promise<void> {
+    public async resetReminderOptions(options?: UserSelectedOptions): Promise<void> {
         await this.update({ task_options: options || {} });
         this.task_options = {};
     }
@@ -189,6 +190,9 @@ export default class User {
     public should_ask_beforehand_time(): boolean {
         /* true when: task_options.repeat is true and repeat_cycle is not "interval" 
             or when: task_options.repeat is false */
+        if (this.task_options.action_type === "hobby") {
+            return false;
+        }
         return (
             (this.task_options.repeat && this.task_options.repeat_cycle !== "interval") ||
             !this.task_options.repeat
@@ -203,6 +207,15 @@ export default class User {
             ? this.task_options.name.replace(".", "\\.")
             : "";
         task.action_type = this.task_options.action_type || "task";
+        if (task.action_type === "hobby") {
+            const hobby = new Hobby();
+            hobby.setAttributes(
+                task.name,
+                this.id,
+                this.task_options.hobby_answers || []
+            );
+            task.hobby = hobby;
+        }
         task.has_beforehand_notification = this.task_options.has_beforehand || false;
         task.beforehand_seconds = this.task_options.beforehand_time || 0;
         task.max_trigger_count = this.task_options.max_trigger_count || 0;

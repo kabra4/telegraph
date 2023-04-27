@@ -8,6 +8,7 @@ import { commandCtx, actionCtx } from "../models/types";
 import { callbackQuery } from "telegraf/filters";
 import Chat from "../models/Chat";
 import { Logger } from "../helpers/Logger";
+import Hobby from "../models/Hobby";
 const logger = Logger.getInstance();
 
 const ls = LocaleService.Instance;
@@ -46,7 +47,15 @@ export default class NotificationController {
 
             const message = await NotificationController.taskToMessage(task, language);
 
-            this.bot.telegram.sendMessage(chat_id, message);
+            if (task.action_type === "task") {
+                // just task
+                this.bot.telegram.sendMessage(chat_id, message);
+            } else if (task.action_type === "hobby" && task.hobby_data) {
+                // hobby
+                const hobby = Hobby.fromData(task.hobby_data);
+                const buttons = hobby.answerButtons(language);
+                this.bot.telegram.sendMessage(chat_id, message, buttons);
+            }
         }
         this.recalculateTasks(tasks);
     }

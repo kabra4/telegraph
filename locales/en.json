@@ -54,7 +54,8 @@
 		"no_tasks": "No tasks",
 		"task_deleted": "Task deleted",
 		"active": "Active",
-		"inactive": "Inactive"
+		"inactive": "Inactive",
+		"interval": "Interval"
 	},
 	"words": {
 		"days": "Days",
@@ -224,6 +225,9 @@
 					"text": "How often should the task be repeated?",
 					"invalid": "Send digit more than 0"
 				}
+			},
+			"hobby_name": {
+				"text": "Send the name of the hobby"
 			}
 		},
 		"reminder_set": "Reminder was successfully set to %s",
@@ -233,11 +237,32 @@
 		"active": "Active",
 		"inactive": "Inactive",
 		"task_deleted": "Task was successfully deleted",
-		"no_name": "No name"
+		"no_name": "No name",
+		"info": {
+			"repeat_after_1_hour": "Repeat after 1 hour"
+		}
 	},
 	"days": {
 		"today": "Today",
 		"tomorrow": "Tomorrow",
 		"yesterday": "Yesterday"
+	},
+	"hobby": {
+		"questions": {
+			"start": {
+				"text": "Send the name of the hobby"
+			},
+			"name": {
+				"text": "Send the name of the hobby"
+			},
+			"answers": {
+				"text": "Send answers separated by comma \\< , \\>\\.\n\nExample: Yes, No, Maybe"
+			}
+		},
+		"answers": {
+			"invalid": "Invalid input"
+		},
+		"show_stats": "Show statistics",
+		"hide": "Hide"
 	}
 }

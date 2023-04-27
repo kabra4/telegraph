@@ -40,8 +40,10 @@
   },
   "dependencies": {
     "@prisma/client": "^4.11.0",
-    "@types/chart.js": "^2.9.37",
-    "chart.js": "^4.2.1",
+    "canvas": "^2.11.2",
+    "chart.js": "^3.5.1",
+    "chartjs-node-canvas": "^4.1.6",
+    "chartjs-to-image": "^1.1.0",
     "concurrently": "^7.6.0",
     "dotenv": "^16.0.3",
     "i18n": "^0.15.1",

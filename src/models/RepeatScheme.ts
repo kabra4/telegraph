@@ -1,6 +1,6 @@
 import { prisma } from "../helpers/prismaClient";
 import { RepeatScheme as RepeatSchemeType } from "@prisma/client";
-import { SelectedTaskOptions, RepeatSchemeProperties } from "./types";
+import { UserSelectedOptions, RepeatSchemeProperties } from "./types";
 import TimeFunctions from "../helpers/TimeFunctions";
 
 export default class RepeatScheme {
@@ -155,13 +155,17 @@ export default class RepeatScheme {
         return rest as RepeatSchemeProperties;
     }
 
-    public static fromSelectedTaskOptions(options: SelectedTaskOptions): RepeatScheme {
+    public static fromSelectedTaskOptions(options: UserSelectedOptions): RepeatScheme {
         const repeatScheme = new RepeatScheme();
         options.time_list ||= [];
         const hours_minutes = options.time_list.map((s) =>
             TimeFunctions.hourAndMinuteFromTimeStr(s)
         );
-        repeatScheme.trigger_time = hours_minutes.map((h, m) => `${h}:${m}`) || [];
+        repeatScheme.trigger_time = hours_minutes.map((n) => {
+            const h = n[0] < 10 ? `0${n[0]}` : `${n[0]}`;
+            const m = n[1] < 10 ? `0${n[1]}` : `${n[1]}`;
+            return `${h}:${m}`;
+        });
         repeatScheme.trigger_date = options.date || "";
         if (options.repeat) {
             repeatScheme.is_repeatable = true;
@@ -186,21 +190,23 @@ export default class RepeatScheme {
     }
 
     public async getNextTrigger(): Promise<Date> {
+        let r: Date;
         if (!this.is_repeatable) {
-            return this.calculateOneTimeTriggerDate();
+            r = await this.calculateOneTimeTriggerDate();
         } else if (this.repeat_type === "weekly") {
-            return this.calculateWeeklyTriggerDate();
+            r = await this.calculateWeeklyTriggerDate();
         } else if (this.repeat_type === "monthly") {
-            return this.calculateMonthlyTriggerDate();
+            r = await this.calculateMonthlyTriggerDate();
         } else if (this.repeat_type === "yearly") {
-            return this.calculateYearlyTriggerDate();
+            r = await this.calculateYearlyTriggerDate();
         } else if (this.repeat_type === "daily") {
-            return this.calculateDailyTriggerDate();
+            r = await this.calculateDailyTriggerDate();
         } else if (this.repeat_type === "interval") {
-            return this.calculateIntervalTriggerDate();
+            r = await this.calculateIntervalTriggerDate();
         } else {
-            return new Date();
+            r = new Date();
         }
+        return TimeFunctions.withZeroSeconds(r);
     }
 
     public async calculateIntervalTriggerDate(): Promise<Date> {

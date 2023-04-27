@@ -5,7 +5,7 @@ import { Message, Update } from "typegram";
 import { LocaleService } from "../helpers/LocaleService";
 
 import { languageCommand } from "../app";
-import { startCtx, helpCtx } from "../models/types";
+import { startCtx, helpCtx, actionCtx } from "../models/types";
 import User from "../models/User";
 import Chat from "../models/Chat";
 import { commandCtx } from "../models/types";
@@ -23,6 +23,7 @@ export default class BasicCommandsController {
         this.bot.start((ctx) => this.start(ctx));
         this.bot.help((ctx) => this.help(ctx));
         this.bot.command("cancel", (ctx) => this.cancel(ctx));
+        this.bot.action("delete|this|message", (ctx) => this.deleteThisMessage(ctx));
     }
 
     public async start(ctx: startCtx): Promise<void> {
@@ -73,5 +74,9 @@ export default class BasicCommandsController {
             logger.info("New chat: " + ctx.chat.id);
         }
         return { user, chat, newUser, newChat };
+    }
+
+    public async deleteThisMessage(ctx: actionCtx): Promise<void> {
+        await ctx.deleteMessage();
     }
 }

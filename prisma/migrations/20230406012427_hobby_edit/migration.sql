@@ -41,7 +41,7 @@ CREATE TABLE "HobbyLog" (
     "id" SERIAL NOT NULL,
     "hobby_id" INTEGER NOT NULL,
     "response" TEXT,
-    "registerd" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "registered" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "HobbyLog_pkey" PRIMARY KEY ("id")
 );

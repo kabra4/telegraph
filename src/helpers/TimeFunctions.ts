@@ -449,9 +449,12 @@ export default class TimeFunctions {
     }
 
     public static nowWithZeroSeconds(): Date {
-        const now = new Date();
-        now.setSeconds(0);
-        now.setMilliseconds(0);
-        return now;
+        return this.withZeroSeconds(new Date());
+    }
+
+    public static withZeroSeconds(d: Date): Date {
+        d.setSeconds(0);
+        d.setMilliseconds(0);
+        return d;
     }
 }
