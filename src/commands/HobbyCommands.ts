@@ -22,6 +22,9 @@ import HobbyLog from "../models/HobbyLog";
 import Hobby from "../models/Hobby";
 import { createNoDataImage, generateStackedBarChart } from "../helpers/ChartMaker";
 
+import { Logger } from "../helpers/Logger";
+const logger = Logger.getInstance();
+
 const ls = LocaleService.Instance;
 
 export default class HobbyController {
@@ -125,7 +128,8 @@ export default class HobbyController {
         const answer = ctx.match[2];
         const time = parseInt(ctx.match[3]);
 
-        HobbyLog.logHobbyAnswer(hobbyId, answer, time);
+        await HobbyLog.logHobbyAnswer(hobbyId, answer, time);
+        logger.info("logged hobby answer " + answer + " for hobby " + hobbyId);
 
         const hobby = await Hobby.getHobbyById(hobbyId);
 
@@ -153,12 +157,14 @@ export default class HobbyController {
             ls.setLocale(language);
             const text = ls.__("hobby.no_logs");
             const imageBuffer = await createNoDataImage(text, 400, 300);
-            ctx.replyWithPhoto({ source: imageBuffer });
+            await ctx.replyWithPhoto({ source: imageBuffer });
         } else {
             // reverse the array
             logsData.reverse();
             const imageBuffer = await generateStackedBarChart(logsData, language);
-            ctx.replyWithPhoto({ source: imageBuffer });
+            await ctx.replyWithPhoto({ source: imageBuffer });
         }
+
+        logger.info("sent hobby stats of " + hobbyId);
     }
 }

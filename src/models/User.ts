@@ -3,9 +3,9 @@ import { User as userType } from "@prisma/client";
 import { userProperties, UserSelectedOptions, TaskProperties } from "./types";
 import RepeatScheme from "./RepeatScheme";
 import Task from "./Task";
+import Hobby from "./Hobby";
 
 import { Logger } from "../helpers/Logger";
-import Hobby from "./Hobby";
 const logger = Logger.getInstance();
 
 export default class User {

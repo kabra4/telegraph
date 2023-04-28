@@ -1,6 +1,9 @@
-import { createCanvas } from "canvas";
+import { CanvasRenderingContext2D, createCanvas } from "canvas";
+
+import pkg from "chart.js";
+const { Chart } = pkg;
 import {
-    Chart,
+    // Chart,
     ChartConfiguration,
     BarElement,
     BarController,
@@ -9,7 +12,12 @@ import {
     ChartDataset,
 } from "chart.js";
 import { ChartJSNodeCanvas } from "chartjs-node-canvas";
-// import CanvasRenderService from "chartjs-node-canvas";
+import "chartjs-plugin-annotation";
+import "chartjs-plugin-datalabels";
+
+import { Logger } from "../helpers/Logger";
+const logger = Logger.getInstance();
+
 // // Chart.register(BarElement, BarController, CategoryScale, LinearScale);
 // // import { toImageBuffer } from "chartjs-to-image";
 
@@ -23,7 +31,7 @@ export type PreprocessedData = {
     };
 };
 
-type Grouping = "day" | "hour";
+type Grouping = "day" | "hour" | "5minute";
 
 function preprocessData(
     jsonData: JsonDataItem[],
@@ -35,6 +43,8 @@ function preprocessData(
             date.setHours(0, 0, 0, 0);
         } else if (roundTo === "hour") {
             date.setMinutes(0, 0, 0);
+        } else if (roundTo === "5minute") {
+            date.setMinutes(date.getMinutes() - (date.getMinutes() % 5));
         }
         return date.toISOString();
     };
@@ -147,9 +157,6 @@ function generateStackedBarChartConfig(
                 },
                 y: {
                     stacked: true,
-                    ticks: {
-                        stepSize: 1,
-                    },
                 },
             },
             plugins: {
@@ -191,13 +198,8 @@ export async function generateStackedBarChart(
     jsonData: JsonDataItem[],
     language: string
 ): Promise<Buffer> {
-    const data = preprocessData(jsonData, "hour");
+    const data = preprocessData(jsonData, "5minute");
     const config = generateStackedBarChartConfig(data, language);
-    // const canvas = createCanvas(800, 600);
-    // const ctx = canvas.getContext("2d");
-    // const chart = new Chart(ctx, config);
-    // const image = chart.toBase64Image();
-    // return image;
     const canvasRenderService = new ChartJSNodeCanvas({ width: 800, height: 600 });
     const image = await canvasRenderService.renderToBuffer(config);
     return image;

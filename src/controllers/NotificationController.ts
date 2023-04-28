@@ -70,11 +70,14 @@ export default class NotificationController {
     }
 
     private recalculateTasks(tasks: Task[]): void {
+        let taskIds = [];
         for (const task of tasks) {
             task.recalculate();
+            taskIds.push(task.id);
         }
         const endTime = new Date();
         const time = endTime.getTime() - this.startTime.getTime();
         logger.info(`Sent ${tasks.length} notifications in ${time} ms`);
+        logger.info(`Tasks id: ${taskIds.join(", ")}`);
     }
 }

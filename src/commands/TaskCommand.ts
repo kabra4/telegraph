@@ -247,8 +247,8 @@ export default class TaskController {
         await user.updateTaskOptionProperty({
             beforehand_time: inSeconds,
         });
-        ctx.deleteMessage();
-        this.saveTask(ctx, user);
+
+        this.saveTask(ctx, user, ctx.callbackQuery ? true : false);
     }
 
     private async processBeforehandInput(
@@ -273,8 +273,10 @@ export default class TaskController {
             ctx.reply(ls.__("task.questions.error.invalid_time"));
             return;
         }
+        console.log(ctx.message.text);
 
         const time = CmdHelper.splitWithComma(ctx.message.text, true);
+        console.log(time);
 
         await user.updateTaskOptionProperty({
             time_list: time,
@@ -381,10 +383,10 @@ export default class TaskController {
     public async processRepeatCycleInput(ctx: actionCtx, cycle: string) {
         const user = await userFromCtx(ctx);
 
-        if (user.currently_doing !== "task.repeat.cycle") {
-            ctx.deleteMessage();
-            return;
-        }
+        // if (user.currently_doing !== "task.repeat.cycle") {
+        //     ctx.deleteMessage();
+        //     return;
+        // }
 
         user.updateTaskOptionProperty({
             repeat_cycle: cycle,
@@ -415,7 +417,7 @@ export default class TaskController {
         } else if (cycle === "interval") {
             this.askIntervalTime(ctx, user, language);
         }
-        ctx.deleteMessage();
+        // ctx.deleteMessage();
     }
 
     public async askIntervalTime(

@@ -260,7 +260,7 @@ export default class ListCommand {
         if (task.hobby_data) {
             const hobbyButton = Markup.button.callback(
                 ls.__("hobby.show_stats"),
-                "hobby.stats." + task.id
+                `hobby|${task.id}|stats`
             );
             keyboard.push([hobbyButton]);
         }

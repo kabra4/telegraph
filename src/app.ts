@@ -14,6 +14,7 @@ import { Logger } from "./helpers/Logger";
 import { message } from "telegraf/filters";
 import User from "./models/User";
 import HobbyController from "./commands/HobbyCommands";
+import { userFromCtx } from "./helpers/UserRegistration";
 
 dotenv.config();
 
@@ -31,7 +32,7 @@ export const hobbyCommand = new HobbyController(bot);
 export const notificationController = new NotificationController(bot);
 
 bot.on(message("text"), async (ctx) => {
-    const user = await User.findUser(ctx.message.from.id);
+    const user = await userFromCtx(ctx);
     if (user.currently_doing.includes("task")) {
         taskCommand.processMessage(ctx, user);
     } else if (user.currently_doing.includes("hobby")) {

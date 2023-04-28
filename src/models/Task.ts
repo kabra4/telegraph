@@ -503,8 +503,23 @@ export default class Task {
     }
 
     public async toggleActive(): Promise<void> {
-        this.is_active = !this.is_active;
-        await this.update({ is_active: this.is_active });
+        if (this.is_active) {
+            this.is_active = false;
+            await this.update({ is_active: this.is_active });
+            return;
+        }
+        this.is_active = true;
+        if (this.max_trigger_count !== 0) {
+            this.trigger_count = 0;
+        }
+        if (this.trigger_timestamp < new Date()) {
+            this.recalculate();
+        }
+        await this.update({
+            is_active: this.is_active,
+            trigger_count: this.trigger_count,
+            trigger_timestamp: this.trigger_timestamp,
+        });
     }
 
     public static async getTasksByTriggerTimestampWithChat(
