@@ -3,8 +3,10 @@
 import { Context, Markup, NarrowedContext, Telegraf } from "telegraf";
 import { Update } from "typegram";
 import { LocaleService } from "../helpers/LocaleService";
-import { commandCtx, actionCtx } from "../models/types";
+import { commandCtx, actionCtx, startCtx } from "../models/types";
 import User from "../models/User";
+import Chat from "../models/Chat";
+import { chatFromCtx } from "../helpers/UserRegistration";
 
 const ls = LocaleService.Instance;
 
@@ -20,14 +22,16 @@ export default class LanguageCommand {
     }
 
     public async lang(ctx: commandCtx): Promise<void> {
-        const user = await User.findUser(ctx.from.id);
-        this.askLanguage(ctx.from.id, user.language);
+        const chat = await chatFromCtx(ctx);
+        this.askLanguage(ctx, chat.language);
     }
 
-    public async askLanguage(chat_id: number, language: string): Promise<void> {
+    public async askLanguage(
+        ctx: startCtx | commandCtx,
+        language: string
+    ): Promise<void> {
         ls.setLocale(language);
-        this.bot.telegram.sendMessage(
-            chat_id,
+        ctx.reply(
             ls.__("lang.question"),
             Markup.inlineKeyboard([
                 Markup.button.callback(ls.__("lang.options.en"), "lang.en"),
@@ -39,8 +43,19 @@ export default class LanguageCommand {
 
     // gets callback query from the user and changes the language of the bot
     public async changeLanguageTo(ctx: actionCtx, lang: string): Promise<void> {
-        const user = await User.findUser(ctx.callbackQuery.from.id);
-        await user.updateLanguage(lang);
+        // if chat type is private, chat and user are the same and both have to be updated
+        // if chat type is group, only chat has to be updated
+
+        if (ctx.chat?.type === "private") {
+            const user = await User.findUser(ctx.callbackQuery.from.id);
+            await user.updateLanguage(lang);
+            const chat = await Chat.findChat(ctx.chat.id);
+            await chat.updateLanguage(lang);
+        } else if (ctx.chat?.type === "group" || ctx.chat?.type === "supergroup") {
+            const chat = await Chat.findChat(ctx.chat.id);
+            await chat.updateLanguage(lang);
+        }
+
         ls.setLocale(lang);
         ctx.editMessageText(ls.__("lang.language_changed"));
     }

@@ -11,7 +11,7 @@ datasource db {
 }
 
 model Chat {
-  id          Int        @id
+  id          BigInt     @id @db.BigInt
   language    String?
   active      Boolean?
   last_active DateTime?
@@ -23,7 +23,7 @@ model Chat {
 }
 
 model User {
-  id              Int        @id
+  id              BigInt     @id @db.BigInt
   name            String?
   last_name       String?
   username        String?
@@ -42,14 +42,14 @@ model User {
 }
 
 model Task {
-  id                  Int      @id @default(autoincrement())
+  id                  BigInt   @id @default(autoincrement()) @db.BigInt
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
   is_beforehand       Boolean?
-  beforehand_owner_id Int?     @unique
+  beforehand_owner_id BigInt?  @unique @db.BigInt
   name                String?
-  chat_id             Int?
-  user_id             Int?
+  chat_id             BigInt?  @db.BigInt
+  user_id             BigInt?  @db.BigInt
   group_id            Int?
   hobby_id            Int?     @unique
 
@@ -72,7 +72,7 @@ model Task {
 
 model Hobby {
   id         Int        @id @default(autoincrement())
-  user_id    Int
+  user_id    BigInt     @db.BigInt
   name       String     @default("")
   answers    String[]
   user       User?      @relation(fields: [user_id], references: [id])
@@ -90,8 +90,8 @@ model HobbyLog {
 
 model Feedback {
   id      Int     @id @default(autoincrement())
-  user_id Int?
-  chat_id Int?
+  user_id BigInt? @db.BigInt
+  chat_id BigInt? @db.BigInt
   content String?
   user    User?   @relation(fields: [user_id], references: [id], onDelete: Cascade)
   chat    Chat?   @relation(fields: [chat_id], references: [id], onDelete: Cascade)
@@ -107,6 +107,6 @@ model RepeatScheme {
   trigger_date     String?
   custom_time      String[]
   interval_seconds Int?
-  tasks_id         Int      @unique
+  tasks_id         BigInt   @unique @db.BigInt
   tasks            Task?    @relation(fields: [tasks_id], references: [id], onDelete: Cascade)
 }

@@ -10,8 +10,12 @@ import User from "../models/User";
 import Chat from "../models/Chat";
 import { commandCtx } from "../models/types";
 
-import { Logger } from "../helpers/Logger";
-const logger = Logger.getInstance();
+import {
+    chatExists,
+    chatFromCtx,
+    userExists,
+    userFromCtx,
+} from "../helpers/UserRegistration";
 
 const ls = LocaleService.Instance;
 
@@ -28,18 +32,17 @@ export default class BasicCommandsController {
 
     public async start(ctx: startCtx): Promise<void> {
         const { user, chat, newUser, newChat } = await this.checkUserAndChat(ctx);
-        ls.setLocale(user.language);
+
+        ls.setLocale(chat.language);
         ctx.replyWithMarkdownV2(ls.__("start"));
 
         if (newChat) {
-            languageCommand.askLanguage(ctx.from.id, user.language);
+            languageCommand.askLanguage(ctx, chat.language);
         }
     }
 
     public async help(ctx: helpCtx): Promise<void> {
-        const user = await User.findUser(ctx.from.id);
-
-        ls.setLocale(user.language);
+        ls.set(ctx);
         let reply_text = "";
         for (let i = 0; i < 5; i++) {
             reply_text += ls.__("help." + i.toString()) + "\n";
@@ -55,24 +58,12 @@ export default class BasicCommandsController {
     public async checkUserAndChat(
         ctx: startCtx
     ): Promise<{ user: User; chat: Chat; newUser: boolean; newChat: boolean }> {
-        let user = await User.findUser(ctx.from.id);
-        const newUser = user.data ? false : true;
-        if (newUser) {
-            await user.create(
-                ctx.from.id,
-                ctx.from.first_name,
-                ctx.from.username,
-                ctx.from.last_name,
-                ctx.from.language_code
-            );
-            logger.info("New user: " + ctx.from.id);
-        }
-        let chat = await Chat.findChat(ctx.chat.id);
-        const newChat = chat.data ? false : true;
-        if (newChat) {
-            await chat.create(ctx.chat.id, ctx.from.language_code, false, ctx.chat.type);
-            logger.info("New chat: " + ctx.chat.id);
-        }
+        const newUser = !(await userExists(ctx.from.id));
+        const user = await userFromCtx(ctx);
+
+        let newChat = !(await chatExists(ctx.chat.id));
+        const chat = await chatFromCtx(ctx);
+
         return { user, chat, newUser, newChat };
     }
 

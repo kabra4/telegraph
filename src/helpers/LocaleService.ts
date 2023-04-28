@@ -7,6 +7,8 @@
 // import i18n from "i18n";
 import { I18n } from "i18n";
 import i18n from "../configs/i18n.config";
+import { actionCtx, commandCtx, hearsCtx, textMessageCtx } from "../models/types";
+import { chatLanguage } from "./UserRegistration";
 
 export class LocaleService {
     private static _instance: LocaleService;
@@ -64,6 +66,20 @@ export class LocaleService {
         if (this.getLocales().indexOf(locale) !== -1) {
             this.i18nProvider.setLocale(locale);
         }
+    }
+
+    set(
+        ctx: textMessageCtx | actionCtx | hearsCtx | commandCtx,
+        userLanguage: string | undefined = undefined,
+        _chatLanguage: string | undefined = undefined
+    ) {
+        if (_chatLanguage) {
+            this.setLocale(_chatLanguage);
+            return;
+        }
+        chatLanguage(ctx, userLanguage).then((language) => {
+            this.setLocale(language);
+        });
     }
 
     /**

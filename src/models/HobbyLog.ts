@@ -38,13 +38,15 @@ export default class HobbyLog {
 
     public static async logHobbyAnswer(
         hobbyId: number,
-        response: string
+        response: string,
+        time: number
     ): Promise<HobbyLog | null> {
         try {
             const hobbyLog = await prisma.hobbyLog.create({
                 data: {
                     hobby_id: hobbyId,
                     response: response,
+                    registered: new Date(time),
                 },
             });
             const hobbyLogModel = new HobbyLog();

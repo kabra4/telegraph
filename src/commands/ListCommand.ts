@@ -8,6 +8,9 @@ import User from "../models/User";
 import { callbackQuery } from "telegraf/filters";
 
 import { Logger } from "../helpers/Logger";
+import Chat from "../models/Chat";
+import { chatFromCtx, chatLanguage } from "../helpers/UserRegistration";
+import { InlineKeyboardMarkup } from "telegraf/typings/core/types/typegram";
 const logger = Logger.getInstance();
 
 const ls = LocaleService.Instance;
@@ -41,23 +44,22 @@ export default class ListCommand {
     }
 
     public async list(ctx: commandCtx): Promise<void> {
-        const user = await User.findUser(ctx.from.id);
+        const chat = await chatFromCtx(ctx);
 
-        const tasksCount = await Task.countUserTasks(user.id);
+        const tasksCount = await Task.countChatTasks(chat.id);
 
         if (tasksCount === 0) {
-            this.noTasks(ctx, user.language);
+            this.noTasks(ctx, chat.language);
             return;
         }
 
         if (tasksCount < 10) {
-            this.listTasks(ctx, await Task.getTasksByChatId(user.id), user.language);
+            this.listTasks(ctx, await Task.getTasksByChatId(chat.id), chat.language);
             return;
         }
 
-        ls.setLocale(user.language);
-        this.bot.telegram.sendMessage(
-            ctx.from.id,
+        ls.setLocale(chat.language);
+        ctx.reply(
             ls.__("list.question"),
             Markup.inlineKeyboard([
                 [Markup.button.callback(ls.__("list.options.all"), "list.all")],
@@ -96,42 +98,15 @@ export default class ListCommand {
         for (let i = 0; i < tasks.length; i++) {
             const task = tasks[i];
 
-            const message = task.getViewString(language);
-
-            const keyboard = [];
-            let buttons = [];
-            if (task.repeat_scheme?.is_repeatable) {
-                const activationButton = Markup.button.callback(
-                    task.is_active
-                        ? ls.__("buttons.deactivate")
-                        : ls.__("buttons.activate"),
-                    task.is_active
-                        ? "deactivate.task." + task.id
-                        : "activate.task." + task.id
-                );
-                buttons.push(activationButton);
-            }
-
-            buttons.push(
-                Markup.button.callback(ls.__("buttons.delete"), "delete.task." + task.id)
-            );
-            keyboard.push(buttons);
-
-            if (task.hobby_data) {
-                const hobbyButton = Markup.button.callback(
-                    ls.__("hobby.show_stats"),
-                    "hobby.stats." + task.id
-                );
-                keyboard.push([hobbyButton]);
-            }
-
-            messages.push({ text: message, buttons: Markup.inlineKeyboard(keyboard) });
+            const message = task.getViewString(ls, language);
+            const keyboard = this.viewButtons(task, language);
+            messages.push({ text: message, buttons: keyboard });
         }
 
         for (let i = 0; i < messages.length; i++) {
             await ctx.replyWithMarkdownV2(messages[i].text, messages[i].buttons);
         }
-        ctx.deleteMessage();
+        if (ctx.updateType === "callback_query") ctx.deleteMessage();
     }
 
     public async listAll(ctx: actionCtx): Promise<void> {
@@ -140,13 +115,12 @@ export default class ListCommand {
             return;
         }
 
-        const chat_id = ctx.update.callback_query.message.chat.id;
+        const chatId = ctx.update.callback_query.message.chat.id;
+        const language = await chatLanguage(ctx);
 
-        const all_tasks = await Task.getTasksByChatId(chat_id);
+        const all_tasks = await Task.getTasksByChatId(chatId);
 
-        const user = await User.findUser(ctx.callbackQuery.from.id);
-
-        this.listTasks(ctx, all_tasks, user.language);
+        this.listTasks(ctx, all_tasks, language);
     }
 
     public async listToday(ctx: actionCtx): Promise<void> {
@@ -163,7 +137,8 @@ export default class ListCommand {
             TimeFunctions.getTomorrow(1, true)
         );
 
-        this.listTasks(ctx, today_tasks, "en");
+        const language = await chatLanguage(ctx);
+        this.listTasks(ctx, today_tasks, language);
     }
 
     public async listTomorrow(ctx: actionCtx): Promise<void> {
@@ -180,7 +155,9 @@ export default class ListCommand {
             TimeFunctions.getTomorrow(2, true)
         );
 
-        this.listTasks(ctx, tomorrow_tasks, "en");
+        const language = await chatLanguage(ctx);
+
+        this.listTasks(ctx, tomorrow_tasks, language);
     }
 
     public async listWeek(ctx: actionCtx): Promise<void> {
@@ -197,7 +174,9 @@ export default class ListCommand {
             TimeFunctions.getTomorrow(7)
         );
 
-        this.listTasks(ctx, week_tasks, "en");
+        const language = await chatLanguage(ctx);
+
+        this.listTasks(ctx, week_tasks, language);
     }
 
     public async listMonth(ctx: actionCtx): Promise<void> {
@@ -214,16 +193,14 @@ export default class ListCommand {
             TimeFunctions.getTomorrow(30)
         );
 
-        this.listTasks(ctx, month_tasks, "en");
+        const language = await chatLanguage(ctx);
+
+        this.listTasks(ctx, month_tasks, language);
     }
 
     public async deleteTask(ctx: actionCtx): Promise<void> {
         const task_id = Number(ctx.match[1]);
-        const user = await User.findUser(ctx.callbackQuery.from.id);
-        if (!user) {
-            return;
-        }
-        ls.setLocale(user.language);
+        ls.set(ctx);
         if (task_id === -1) {
             ctx.replyWithMarkdownV2(ls.__("list.task_not_found"));
             return;
@@ -239,12 +216,9 @@ export default class ListCommand {
 
     public async toggleTaskActive(ctx: actionCtx): Promise<void> {
         const task_id = Number(ctx.match[2]);
-        const user = await User.findUser(ctx.callbackQuery.from.id);
-        if (!user.data) {
-            return;
-        }
+        const language = await chatLanguage(ctx);
 
-        ls.setLocale(user.language);
+        ls.setLocale(language);
         if (task_id === -1) {
             ctx.replyWithMarkdownV2(ls.__("list.task_not_found"));
             return;
@@ -253,21 +227,44 @@ export default class ListCommand {
         await task.toggleActive();
 
         // edit message with markdownv2
-        const newMessage = task.getViewString(user.language);
-        const activationButton = Markup.button.callback(
-            task.is_active ? ls.__("buttons.deactivate") : ls.__("buttons.activate"),
-            task.is_active ? "deactivate.task." + task.id : "activate.task." + task.id
-        );
+        const newMessage = task.getViewString(ls, language);
 
-        const buttons = Markup.inlineKeyboard([
-            activationButton,
-            Markup.button.callback(ls.__("buttons.delete"), "delete.task." + task.id),
-        ]);
+        const keyboard = this.viewButtons(task, language);
 
         ctx.editMessageText(newMessage, {
             parse_mode: "MarkdownV2",
-            reply_markup: buttons.reply_markup,
+            reply_markup: keyboard.reply_markup,
         });
+    }
+
+    public viewButtons(
+        task: Task,
+        language: string
+    ): Markup.Markup<InlineKeyboardMarkup> {
+        ls.setLocale(language);
+        const keyboard = [];
+        let buttons = [];
+        if (task.repeat_scheme?.is_repeatable) {
+            const activationButton = Markup.button.callback(
+                task.is_active ? ls.__("buttons.deactivate") : ls.__("buttons.activate"),
+                task.is_active ? "deactivate.task." + task.id : "activate.task." + task.id
+            );
+            buttons.push(activationButton);
+        }
+
+        buttons.push(
+            Markup.button.callback(ls.__("buttons.delete"), "delete.task." + task.id)
+        );
+        keyboard.push(buttons);
+
+        if (task.hobby_data) {
+            const hobbyButton = Markup.button.callback(
+                ls.__("hobby.show_stats"),
+                "hobby.stats." + task.id
+            );
+            keyboard.push([hobbyButton]);
+        }
+        return Markup.inlineKeyboard(keyboard);
     }
 
     public async setTaskRepeat(ctx: actionCtx) {
@@ -275,11 +272,6 @@ export default class ListCommand {
         const task_id = Number(ctx.match[1]);
         const repeat_value = Number(ctx.match[2]);
         const repeat_unit = ctx.match[3];
-
-        const user = await User.findUser(ctx.callbackQuery.from.id);
-        if (!user.data) {
-            return;
-        }
 
         let now = new Date();
         const seconds = TimeFunctions.calculateSecondsFromString(

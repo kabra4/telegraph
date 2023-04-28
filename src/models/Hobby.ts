@@ -8,8 +8,6 @@ import { Markup } from "telegraf";
 import { InlineKeyboardMarkup } from "telegraf/typings/core/types/typegram";
 import { LocaleService } from "../helpers/LocaleService";
 
-const ls = LocaleService.Instance;
-
 type JsonDataItem = {
     datetime: string;
     value: string;
@@ -66,13 +64,19 @@ export default class Hobby {
         this.attributesToData();
     }
 
-    public answerButtons(language: string): Markup.Markup<InlineKeyboardMarkup> {
+    public answerButtons(
+        ls: LocaleService,
+        language: string
+    ): Markup.Markup<InlineKeyboardMarkup> {
         const keyboard = [];
         for (let i = 0; i < this.answers.length; i += 3) {
             const row = this.answers
                 .slice(i, i + 3)
                 .map((answer) =>
-                    Markup.button.callback(answer, `hobby|${this.id}|log|${answer}`)
+                    Markup.button.callback(
+                        answer,
+                        `hobby|${this.id}|log|${answer}|time|${Date.now()}`
+                    )
                 );
             keyboard.push(row);
         }
@@ -91,7 +95,7 @@ export default class Hobby {
             this.id = data.id;
             this.name = data.name;
             this.answers = data.answers;
-            this.user_id = data.user_id;
+            this.user_id = Number(data.user_id);
         }
     }
 
@@ -192,7 +196,7 @@ export default class Hobby {
             id: this.id,
             name: this.name,
             answers: this.answers,
-            user_id: this.user_id,
+            user_id: BigInt(this.user_id),
         };
         return this.data;
     }

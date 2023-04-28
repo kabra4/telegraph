@@ -1,12 +1,15 @@
 {
-	"start": "Welcome to *Planner Guru*\\.\n\nThis bot will help you to remember important events and tasks\\.\n\nYou can create a task by typing /task\\.\n You can see all commands by typing /help\\.",
+	"start": "Welcome to *Planner Guru*\\.\n\nThis bot will help you to remember important events and tasks\\.\n\n/task Create reminder\\.\n\n/hobby Keep track of task results\\.\n\n/list List all task and hobby\\.\n\n/lang Change Language\\.\n\n/help all commands by typing\\.\n\n/cancel Cancel current action\\.",
 	"lang_on_start": "Is your language English?\nIf not, type /lang to change language",
 	"help": {
 		"0": "This is all commands",
 		"1": "/start - start bot",
 		"2": "/help - show all commands",
 		"3": "/lang - change language",
-		"4": "/task - create a task"
+		"4": "list - list all task and hobby",
+		"5": "/task - create a task",
+		"6": "/hobby - create a hobby",
+		"7": "/cancel - cancel current action"
 	},
 	"lang": {
 		"name": "English",
@@ -17,7 +20,7 @@
 			"ru": "Russian",
 			"uz": "Uzbek"
 		},
-		"language_changed": "Language changed to English",
+		"language_changed": "Language changed",
 		"language_has_not_changed": "Language has not changed"
 	},
 	"buttons": {
@@ -32,7 +35,8 @@
 		"deselect_all": "Deselect all",
 		"delete": "Delete",
 		"deactivate": "Deactivate",
-		"activate": "Activate"
+		"activate": "Activate",
+		"sure": "Sure"
 	},
 	"list": {
 		"empty": "List is empty",

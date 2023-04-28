@@ -15,6 +15,9 @@ export default class User {
 
     // the data of the user
     public data: userType | null;
+    public name: string = "";
+    public last_name: string = "";
+    public username: string = "";
     public language: string = "ru";
     public currently_doing: string = "";
 
@@ -61,12 +64,49 @@ export default class User {
                     language,
                 },
             });
-            this.id = this.data.id;
-            this.language = language;
+            this.setProperty(this.data);
             logger.info(`User ${this.id} created`);
         } catch (err) {
             logger.error(err);
         }
+    }
+
+    public static async userData(id: number): Promise<userType | null> {
+        const user = await prisma.user.findUnique({
+            where: {
+                id,
+            },
+        });
+        return user;
+    }
+
+    public setProperty(userData: userType): void {
+        this.data = userData;
+        this.id = Number(userData.id);
+        this.language = userData.language || "ru";
+        this.name = userData.name || "";
+        this.last_name = userData.last_name || "";
+        this.currently_doing = userData.currently_doing || "";
+        this.task_options = (userData.task_options as UserSelectedOptions) || {};
+    }
+
+    public static fromData(userData: userType): User {
+        const user = new User();
+        user.setProperty(userData);
+        return user;
+    }
+
+    public static async createUser(
+        id: number,
+        name: string,
+        last_name: string = "",
+        username: string = "",
+        language: string = "ru"
+    ): Promise<User> {
+        const user = new User();
+        await user.create(id, name, last_name, username, language);
+        logger.info(`User ${user.id} created`);
+        return user;
     }
 
     // the function to get the data of the user

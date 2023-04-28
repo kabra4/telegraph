@@ -20,7 +20,7 @@ import { LocaleService } from "../helpers/LocaleService";
 import Hobby from "./Hobby";
 const logger = Logger.getInstance();
 
-const ls = LocaleService.Instance;
+// const ls = LocaleService.Instance;
 
 export default class Task {
     public id: number;
@@ -130,14 +130,14 @@ export default class Task {
     }
 
     public setAttributes(data: TaskType): void {
-        this.id = data.id;
+        this.id = Number(data.id);
         this.created_at = data.createdAt;
         this.updated_at = data.updatedAt;
         this.is_beforehand = data.is_beforehand || false;
-        this.beforehand_owner_id = data.beforehand_owner_id || -1;
+        this.beforehand_owner_id = Number(data.beforehand_owner_id) || -1;
         this.name = data.name || "";
-        this.chat_id = data.chat_id || -1;
-        this.user_id = data.user_id || -1;
+        this.chat_id = Number(data.chat_id) || -1;
+        this.user_id = Number(data.user_id) || -1;
         this.group_id = data.group_id || -1;
         this.hobby_id = data.hobby_id || -1;
         this.trigger_timestamp = data.trigger_timestamp || new Date();
@@ -305,6 +305,7 @@ export default class Task {
                 include: {
                     repeat_scheme: true,
                     beforehand_task: true,
+                    hobby: true,
 
                     beforehand_owner: {
                         include: {
@@ -316,7 +317,8 @@ export default class Task {
             if (!res) {
                 return;
             }
-            const { repeat_scheme, beforehand_task, beforehand_owner, ...data } = res;
+            const { repeat_scheme, beforehand_task, beforehand_owner, hobby, ...data } =
+                res;
 
             this.setAttributes(data);
             if (repeat_scheme) {
@@ -334,6 +336,10 @@ export default class Task {
                         RepeatSchemeModel.getRepeatSchemeWithParams(repeat_scheme);
                 }
             }
+
+            if (hobby) {
+                this.hobby_data = hobby;
+            }
         } catch (err) {
             logger.error(err);
         }
@@ -341,17 +347,17 @@ export default class Task {
 
     private attributesToData(): void {
         this.data = {
-            id: this.id,
+            id: BigInt(this.id),
             updatedAt: this.updated_at,
             createdAt: this.created_at,
             name: this.name,
             action_type: this.action_type,
             is_beforehand: this.is_beforehand,
             beforehand_owner_id:
-                this.beforehand_owner_id === -1 ? null : this.beforehand_owner_id,
+                this.beforehand_owner_id === -1 ? null : BigInt(this.beforehand_owner_id),
             is_active: this.is_active,
-            chat_id: this.chat_id === -1 ? null : this.chat_id,
-            user_id: this.user_id === -1 ? null : this.user_id,
+            chat_id: this.chat_id === -1 ? null : BigInt(this.chat_id),
+            user_id: this.user_id === -1 ? null : BigInt(this.user_id),
             group_id: this.group_id === -1 ? null : this.group_id,
             hobby_id: this.hobby_id === -1 ? null : this.hobby_id,
             trigger_timestamp: this.trigger_timestamp,
@@ -549,8 +555,12 @@ export default class Task {
         await this.save();
     }
 
-    public getViewString(language: string): string {
-        const triggerString = TimeFunctions.formatDate(this.trigger_timestamp, language);
+    public getViewString(ls: LocaleService, language: string): string {
+        const triggerString = TimeFunctions.formatDate(
+            this.trigger_timestamp,
+            ls,
+            language
+        );
 
         ls.setLocale(language);
         const isActiveString = this.is_active
@@ -596,10 +606,10 @@ export default class Task {
         return message;
     }
 
-    public static async countUserTasks(user_id: number): Promise<number> {
+    public static async countChatTasks(chat_id: number): Promise<number> {
         return await prisma.task.count({
             where: {
-                user_id,
+                chat_id,
             },
         });
     }

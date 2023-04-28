@@ -49,8 +49,11 @@ export default class CmdHelper {
         }
     }
 
-    public static splitWithComma(text: string): string[] {
-        return text.split(/[\s\,]+/).map((t) => t.trim());
+    public static splitWithComma(text: string, spaces: boolean = false): string[] {
+        if (spaces) {
+            return text.split(/[\s,]+/).map((t) => t.trim());
+        }
+        return text.split(",").map((t) => t.trim());
     }
 
     public static keyboardFromMatrix(

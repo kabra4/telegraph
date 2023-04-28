@@ -1,6 +1,8 @@
 import { prisma } from "../helpers/prismaClient";
 import { Chat as ChatType } from "@prisma/client";
 import { ChatProperties, UserSelectedOptions } from "./types";
+import { Logger } from "../helpers/Logger";
+const logger = Logger.getInstance();
 
 export default class Chat {
     public id: number;
@@ -15,7 +17,7 @@ export default class Chat {
     // the constructor of the chat
     // takes the id of the chat
     constructor(id?: number) {
-        this.id = id || 0;
+        this.id = Number(id) || 0;
         this.data = {} as ChatType;
         this.active = false;
         if (this.id !== 0) {
@@ -33,7 +35,7 @@ export default class Chat {
                 },
             });
             if (this.data) {
-                this.id = this.data.id;
+                this.id = Number(this.data.id);
                 this.language = this.data.language || "ru";
                 this.active = this.data.active || false;
                 this.type = this.data.type || "private";
@@ -51,7 +53,7 @@ export default class Chat {
 
     public dataToAttributes(): void {
         if (this.data) {
-            this.id = this.data.id;
+            this.id = Number(this.data.id);
             this.language = this.data.language || "ru";
             this.active = this.data.active || false;
             this.type = this.data.type || "private";
@@ -94,7 +96,7 @@ export default class Chat {
                 },
             });
             if (this.data) {
-                this.id = this.data.id;
+                this.id = Number(this.data.id);
                 this.language = this.data.language || "ru";
                 this.active = this.data.active || false;
                 this.type = this.data.type || "private";
@@ -139,7 +141,7 @@ export default class Chat {
                 data,
             });
             if (this.data) {
-                this.id = this.data.id;
+                this.id = Number(this.data.id);
                 this.language = this.data.language || "ru";
                 this.active = this.data.active || false;
                 this.type = this.data.type || "private";
@@ -163,5 +165,23 @@ export default class Chat {
         if (!data) return {} as ChatProperties;
         const { id, createdAt, updatedAt, ...rest } = data;
         return rest as ChatProperties;
+    }
+
+    public static fromData(data: ChatType): Chat {
+        const chat = new Chat(Number(data.id));
+        chat.data = data;
+        chat.dataToAttributes();
+        return chat;
+    }
+
+    public static async createChat(
+        id: number,
+        type: string = "private",
+        language: string = "ru"
+    ): Promise<Chat> {
+        const chat = new Chat();
+        await chat.create(id, language, true, type);
+        logger.info(`Chat ${id} created`);
+        return chat;
     }
 }

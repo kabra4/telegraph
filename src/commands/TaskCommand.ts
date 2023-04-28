@@ -17,17 +17,19 @@ import {
     commandCtx,
     textMessageCtx,
 } from "../models/types";
+import {
+    chatLanguage,
+    userExists,
+    userFromCallback,
+    userFromCtx,
+    userFromTextCtx,
+} from "../helpers/UserRegistration";
 
 const ls = LocaleService.Instance;
 
 export default class TaskController {
     // the bot
     private bot: Telegraf<Context<Update>>;
-    private repeat_cycles: string[][] = [
-        ["daily", "weekly"],
-        ["monthly", "yearly"],
-        ["interval"],
-    ];
     private beforehand_options: string[][] = [
         ["10 minutes", "30 minutes", "1 hour"],
         ["1 day", "3 days", "7 days"],
@@ -121,22 +123,24 @@ export default class TaskController {
 
     // the function to handle the task command
     public async task(ctx: commandCtx): Promise<void> {
+        const user = await userFromCtx(ctx);
+
         const hasArguments = ctx.message.text.split(" ").length > 1;
 
         if (!hasArguments) {
-            this.askTaskName(ctx);
+            this.askTaskName(ctx, user);
         } else {
             // TODO: implement task creation with arguments
-            this.askTaskName(ctx);
+            this.askTaskName(ctx, user);
         }
     }
 
     public async startTaskCreation(ctx: commandCtx, user?: User): Promise<void> {
-        user ||= await User.findUser(ctx.message.from.id);
+        user ||= await userFromCtx(ctx);
 
         user.updateCurrentlyDoing("task.repeat");
 
-        ls.setLocale(user.language);
+        ls.set(ctx, user.language);
         ctx.replyWithMarkdownV2(
             ls.__("task.questions.start.text"),
             Markup.inlineKeyboard([
@@ -156,7 +160,7 @@ export default class TaskController {
     // takes the context of the message
     // returns nothing
     protected async processBeforehand(ctx: actionCtx, beforehand_is_asked: boolean) {
-        const user = await User.findUser(ctx.callbackQuery.from.id);
+        const user = await userFromCtx(ctx);
 
         if (user.currently_doing !== "task.beforehand") {
             ctx.deleteMessage();
@@ -169,7 +173,7 @@ export default class TaskController {
                 has_beforehand: true,
             });
 
-            ls.setLocale(user.language);
+            ls.set(ctx, user.language);
             ctx.editMessageText(
                 ls.__("task.questions.select_beforehand_time.text"),
                 Markup.inlineKeyboard(
@@ -210,7 +214,8 @@ export default class TaskController {
     private async saveTask(
         ctx: actionCtx | textMessageCtx | hearsCtx,
         user: User,
-        deleteMessage = false
+        deleteMessage = false,
+        lang: string | undefined = undefined
     ) {
         const chat_id = this.getChatId(ctx);
         (await user.taskFromSelectedTaskOptions(chat_id)).save();
@@ -221,7 +226,7 @@ export default class TaskController {
         if (!ctx.message && deleteMessage) {
             ctx.deleteMessage();
         }
-        ls.setLocale(user.language);
+        ls.set(ctx, user.language);
         ctx.reply(ls.__("task.created"));
     }
 
@@ -230,7 +235,7 @@ export default class TaskController {
         option: string,
         user?: User
     ) {
-        user ||= await CmdHelper.userFromCtx(ctx);
+        user ||= await userFromCtx(ctx);
 
         if (user.currently_doing !== "task.beforehand_time") {
             ctx.deleteMessage();
@@ -251,7 +256,7 @@ export default class TaskController {
         user: User
     ) {
         if (!TimeFunctions.isValidTimePeriod(ctx.message.text)) {
-            ls.setLocale(user.language);
+            ls.set(ctx, user.language);
             ctx.reply(ls.__("task.questions.custom_beforehand_time.invalid"));
             return;
         }
@@ -264,12 +269,12 @@ export default class TaskController {
     // returns nothing
     protected async processTimeInput(ctx: hearsRegexCtx | textMessageCtx, user: User) {
         if (!TimeFunctions.isValidTime(ctx.message.text)) {
-            ls.setLocale(user.language);
+            ls.set(ctx, user.language);
             ctx.reply(ls.__("task.questions.error.invalid_time"));
             return;
         }
 
-        const time = CmdHelper.splitWithComma(ctx.message.text);
+        const time = CmdHelper.splitWithComma(ctx.message.text, true);
 
         await user.updateTaskOptionProperty({
             time_list: time,
@@ -284,7 +289,7 @@ export default class TaskController {
 
     public async askBeforehand(ctx: hearsRegexCtx | textMessageCtx, user: User) {
         user.updateCurrentlyDoing("task.beforehand");
-        ls.setLocale(user.language);
+        ls.set(ctx, user.language);
         ctx.reply(
             ls.__("task.questions.has_it_beforehand.text"),
             Markup.inlineKeyboard([
@@ -304,10 +309,10 @@ export default class TaskController {
         ctx: hearsRegexCtx | textMessageCtx | actionCtx,
         user?: User
     ) {
-        user ||= await CmdHelper.userFromCtx(ctx);
+        user ||= await userFromCtx(ctx);
         user.updateCurrentlyDoing("task.name");
         user.resetReminderOptions({ action_type: "task" });
-        ls.setLocale(user.language);
+        ls.set(ctx, user.language);
         ctx.reply(ls.__("task.questions.task_name.text"));
     }
 
@@ -329,13 +334,13 @@ export default class TaskController {
         const text = feature
             ? "task.feature_not_implemented." + feature
             : "task.feature_not_implemented";
-        ls.setLocale(user.language);
+        ls.set(ctx, user.language);
         ctx.reply(ls.__(text));
     }
 
     // the fn if repeat is yes
     public async processRepeatYes(ctx: actionCtx) {
-        const user = await User.findUser(ctx.callbackQuery.from.id);
+        const user = await userFromCtx(ctx);
 
         if (user.currently_doing !== "task.repeat") {
             await ctx.deleteMessage();
@@ -346,7 +351,7 @@ export default class TaskController {
         user.updateTaskOptionProperty({
             repeat: true,
         });
-        ls.setLocale(user.language);
+        ls.set(ctx, user.language);
         ctx.editMessageText(
             ls.__("task.questions.repeat.text"),
             CmdHelper.repeatTypesKeyboard("task.questions.repeat.options.", user.language)
@@ -355,7 +360,7 @@ export default class TaskController {
 
     // the fn if repeat is no
     private async processRepeatNo(ctx: actionCtx) {
-        const user = await User.findUser(ctx.callbackQuery.from.id);
+        const user = await userFromCtx(ctx);
 
         if (user.currently_doing !== "task.repeat") return;
 
@@ -365,7 +370,7 @@ export default class TaskController {
         });
 
         const current_year = new Date().getFullYear();
-        ls.setLocale(user.language);
+        ls.set(ctx, user.language);
         ctx.editMessageText(
             ls.__("task.questions.calendar_1"),
             await CalendarMaker.makeMonthsGrid(user.language, current_year, true)
@@ -374,7 +379,7 @@ export default class TaskController {
 
     // the function to process the repeat cycle input
     public async processRepeatCycleInput(ctx: actionCtx, cycle: string) {
-        const user = await User.findUser(ctx.callbackQuery.from.id);
+        const user = await userFromCtx(ctx);
 
         if (user.currently_doing !== "task.repeat.cycle") {
             ctx.deleteMessage();
@@ -388,39 +393,44 @@ export default class TaskController {
         if (cycle !== "daily" && cycle !== "interval") {
             user.updateCurrentlyDoing("task.repeat.pattern");
         }
-
-        ls.setLocale(user.language);
+        const language = await chatLanguage(ctx, user.language);
+        ls.setLocale(language);
         if (cycle === "yearly") {
             ctx.editMessageText(
                 ls.__("task.questions.calendar_1.text"),
-                await CalendarMaker.makeMonthsGrid(user.language)
+                await CalendarMaker.makeMonthsGrid(language)
             );
         } else if (cycle === "monthly") {
             ctx.editMessageText(
                 ls.__("task.questions.calendar_multiselect.text"),
-                await CalendarMaker.multiselectCalendar(user.language)
+                await CalendarMaker.multiselectCalendar(language)
             );
         } else if (cycle === "weekly") {
             ctx.editMessageText(
                 ls.__("task.questions.repeat.weekly.text"),
-                await CalendarMaker.weekdaysMarkup(user.language)
+                await CalendarMaker.weekdaysMarkup(language)
             );
         } else if (cycle === "daily") {
-            this.askTime(ctx, user);
+            this.askTime(ctx, user, language);
         } else if (cycle === "interval") {
-            this.askIntervalTime(ctx, user);
+            this.askIntervalTime(ctx, user, language);
         }
+        ctx.deleteMessage();
     }
 
-    public async askIntervalTime(ctx: actionCtx, user: User): Promise<void> {
+    public async askIntervalTime(
+        ctx: actionCtx,
+        user: User,
+        lang: string
+    ): Promise<void> {
         user.updateCurrentlyDoing("task.interval.time");
-        ls.setLocale(user.language);
+        ls.setLocale(lang);
         ctx.reply(ls.__("task.questions.interval.time.text"));
     }
 
     // the function to process the "calendar" date input
     public async processDateInput(ctx: actionCtx) {
-        const user = await User.findUser(ctx.callbackQuery.from.id);
+        const user = await userFromCtx(ctx);
 
         if (
             user.currently_doing !== "task.pattern.date" &&
@@ -436,8 +446,9 @@ export default class TaskController {
         if (date === "") {
             return;
         }
+        const lang = await chatLanguage(ctx, user.language);
         if (!TimeFunctions.isDateInFuture(date)) {
-            ls.setLocale(user.language);
+            ls.setLocale(lang);
             ctx.reply(ls.__("task.questions.error.date_in_past"));
             return;
         }
@@ -446,12 +457,12 @@ export default class TaskController {
             date: date,
         });
 
-        this.askTime(ctx, user);
+        this.askTime(ctx, user, lang);
     }
 
     // the function to process the "calendar" navigation
     public async processCalendarNavigation(ctx: actionCtx, navigation: string) {
-        const user = await User.findUser(ctx.callbackQuery.from.id);
+        const user = await userFromCtx(ctx);
 
         if (user.currently_doing !== "task.pattern.date") {
             ctx.deleteMessage();
@@ -461,18 +472,18 @@ export default class TaskController {
         const query = CmdHelper.getCallbackText(ctx);
 
         const date: string = query.split("|")[2];
-
+        const lang = await chatLanguage(ctx, user.language);
         if (navigation === "prev") {
-            this.processCalendarNavigationPrev(ctx, user, query, date);
+            this.processCalendarNavigationPrev(ctx, user, query, date, lang);
         } else if (navigation === "next") {
-            this.processCalendarNavigationNext(ctx, user, query, date);
+            this.processCalendarNavigationNext(ctx, user, query, date, lang);
         } else if (navigation === "today") {
             user.updateTaskOptionProperty({
                 date: date,
             });
             user.updateCurrentlyDoing("task.pattern.time");
 
-            this.askTime(ctx, user);
+            this.askTime(ctx, user, lang);
         }
     }
 
@@ -480,7 +491,8 @@ export default class TaskController {
         ctx: actionCtx,
         user: User,
         query: string,
-        date: string
+        date: string,
+        lang: string
     ) {
         let year = Number(date.split("-")[0]);
         let month = Number(date.split("-")[1]);
@@ -492,12 +504,12 @@ export default class TaskController {
         let calendar = Markup.inlineKeyboard([]);
         if (query.includes("year"))
             calendar = await CalendarMaker.makeMonthsGrid(
-                user.language,
+                lang,
                 year,
                 !user.task_options.repeat
             );
         else if (query.includes("month"))
-            calendar = await CalendarMaker.makeCalendar(user.language, year, month);
+            calendar = await CalendarMaker.makeCalendar(lang, year, month);
         ctx.editMessageReplyMarkup(calendar.reply_markup);
     }
 
@@ -505,7 +517,8 @@ export default class TaskController {
         ctx: actionCtx,
         user: User,
         query: string,
-        date: string
+        date: string,
+        lang: string
     ) {
         let year = Number(date.split("-")[0]);
         let month = Number(date.split("-")[1]);
@@ -517,12 +530,12 @@ export default class TaskController {
         let calendar = Markup.inlineKeyboard([]);
         if (query.includes("year"))
             calendar = await CalendarMaker.makeMonthsGrid(
-                user.language,
+                lang,
                 year,
                 !user.task_options.repeat
             );
         else if (query.includes("month"))
-            calendar = await CalendarMaker.makeCalendar(user.language, year, month);
+            calendar = await CalendarMaker.makeCalendar(lang, year, month);
 
         ctx.editMessageReplyMarkup(calendar.reply_markup);
     }
@@ -530,7 +543,7 @@ export default class TaskController {
     // the function to process month input
     // runs when the user clicks on a month in the month grid
     public async processMonthCalendar(ctx: actionCtx) {
-        const user = await User.findUser(ctx.callbackQuery.from.id);
+        const user = await userFromCtx(ctx);
 
         if (
             user.currently_doing !== "task.pattern.date" &&
@@ -541,12 +554,12 @@ export default class TaskController {
         }
 
         const date = CmdHelper.getCallbackText(ctx).split("|")[2];
-
-        ls.setLocale(user.language);
+        const lang = await chatLanguage(ctx, user.language);
+        ls.set(ctx, lang);
         ctx.editMessageText(
             ls.__("task.questions.calendar_1.text"),
             await CalendarMaker.makeCalendar(
-                user.language,
+                lang,
                 Number(date.split("-")[0]),
                 Number(date.split("-")[1])
             )
@@ -554,7 +567,7 @@ export default class TaskController {
     }
 
     public async processWeekDayInput(ctx: actionCtx) {
-        const user = await User.findUser(ctx.callbackQuery.from.id);
+        const user = await userFromCtx(ctx);
 
         if (user.currently_doing !== "task.repeat.pattern") {
             ctx.deleteMessage();
@@ -566,7 +579,7 @@ export default class TaskController {
         user.toggleDaysSelection(weekday);
 
         const updatedMarkup = await await CalendarMaker.weekdaysMarkup(
-            user.language,
+            await chatLanguage(ctx, user.language),
             user.task_options.checked_days
         );
 
@@ -574,7 +587,7 @@ export default class TaskController {
     }
 
     public async processMultiselectCalendarFinish(ctx: actionCtx) {
-        const user = await User.findUser(ctx.callbackQuery.from.id);
+        const user = await userFromCtx(ctx);
 
         if (
             user.currently_doing !== "task.repeat.pattern" &&
@@ -588,20 +601,24 @@ export default class TaskController {
             checked_days: user.task_options.checked_days,
         });
 
-        this.askTime(ctx, user);
+        this.askTime(ctx, user, await chatLanguage(ctx, user.language));
     }
 
-    public async askTime(ctx: actionCtx, user?: User) {
-        user ||= await User.findUser(ctx.callbackQuery.from.id);
+    public async askTime(
+        ctx: actionCtx,
+        user: User | undefined = undefined,
+        lang: string = "en"
+    ) {
+        user ||= await userFromCtx(ctx);
         user.updateCurrentlyDoing("task.pattern.time");
 
         ctx.deleteMessage();
-        ls.setLocale(user.language);
+        ls.setLocale(lang);
         ctx.replyWithMarkdownV2(ls.__("task.questions.send_time.single"));
     }
 
     public async processCalendarMultiselectInput(ctx: actionCtx) {
-        const user = await User.findUser(ctx.callbackQuery.from.id);
+        const user = await userFromCtx(ctx);
 
         if (
             user.currently_doing !== "task.pattern.date" &&
@@ -614,10 +631,10 @@ export default class TaskController {
         const selected_day = ctx.match[1];
 
         user.toggleDaysSelection(selected_day);
-
-        ls.setLocale(user.language);
+        const lang = await chatLanguage(ctx, user.language);
+        ls.setLocale(lang);
         const updatedMarkup = await CalendarMaker.multiselectCalendar(
-            user.language,
+            lang,
             user.task_options.checked_days
         );
         ctx.editMessageReplyMarkup(updatedMarkup.reply_markup);
@@ -645,8 +662,9 @@ export default class TaskController {
         ctx: textMessageCtx,
         user: User
     ): Promise<void> {
+        const lang = await chatLanguage(ctx, user.language);
         if (!TimeFunctions.isValidTimePeriod(ctx.message.text)) {
-            ls.setLocale(user.language);
+            ls.setLocale(lang);
             ctx.reply(ls.__("task.questions.interval.time.invalid"));
             return;
         }
@@ -656,19 +674,20 @@ export default class TaskController {
             interval_seconds: inSeconds,
         });
 
-        this.askTaskIntervalCount(ctx, user);
+        this.askTaskIntervalCount(ctx, user, lang);
     }
 
     public async processIntervalCountInput(
         ctx: textMessageCtx | actionCtx,
         user?: User
     ): Promise<void> {
-        user ||= await CmdHelper.userFromCtx(ctx);
+        user ||= await userFromCtx(ctx);
 
-        let response = ctx.message ? ctx.message.text.split("|")[-1] : ctx.match[1];
+        let response = ctx.message ? ctx.message.text : ctx.match[1];
 
+        const lang = await chatLanguage(ctx, user.language);
         if (!Number(response) || Number(response) < 1) {
-            ls.setLocale(user.language);
+            ls.setLocale(lang);
             ctx.reply(ls.__("task.questions.interval.count.invalid"));
             return;
         }
@@ -677,13 +696,17 @@ export default class TaskController {
             max_trigger_count: Number(response),
         });
 
-        this.saveTask(ctx, user, true);
+        this.saveTask(ctx, user, true, lang);
     }
 
-    public async askTaskIntervalCount(ctx: textMessageCtx, user: User): Promise<void> {
+    public async askTaskIntervalCount(
+        ctx: textMessageCtx,
+        user: User,
+        lang: string
+    ): Promise<void> {
         user.updateCurrentlyDoing("task.interval.count");
 
-        ls.setLocale(user.language);
+        ls.setLocale(lang);
         ctx.reply(
             ls.__("task.questions.interval.count.text"),
             Markup.inlineKeyboard([

@@ -47,7 +47,7 @@ export default class RepeatScheme {
         this.days_of_month = data.days_of_month;
         this.trigger_time = data.trigger_time;
         this.interval_seconds = data.interval_seconds || 0;
-        this.tasks_id = data.tasks_id || -1;
+        this.tasks_id = Number(data.tasks_id) || -1;
         this.is_repeatable = data.is_repeatable || false;
         this.repeat_type = data.repeat_type || "";
         this.custom_time = data.custom_time;
@@ -73,7 +73,7 @@ export default class RepeatScheme {
             trigger_time: this.trigger_time,
             trigger_date: this.trigger_date,
             interval_seconds: this.interval_seconds,
-            tasks_id: this.tasks_id,
+            tasks_id: BigInt(this.tasks_id),
             is_repeatable: this.is_repeatable,
             repeat_type: this.repeat_type,
             custom_time: this.custom_time,
@@ -138,7 +138,7 @@ export default class RepeatScheme {
             trigger_time: this.trigger_time,
             trigger_date: this.trigger_date,
             interval_seconds: this.interval_seconds,
-            tasks_id: this.tasks_id,
+            tasks_id: BigInt(this.tasks_id),
             is_repeatable: this.is_repeatable,
             repeat_type: this.repeat_type,
             custom_time: this.custom_time,

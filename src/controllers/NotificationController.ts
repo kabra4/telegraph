@@ -53,7 +53,7 @@ export default class NotificationController {
             } else if (task.action_type === "hobby" && task.hobby_data) {
                 // hobby
                 const hobby = Hobby.fromData(task.hobby_data);
-                const buttons = hobby.answerButtons(language);
+                const buttons = hobby.answerButtons(ls, language);
                 this.bot.telegram.sendMessage(chat_id, message, buttons);
             }
         }

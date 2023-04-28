@@ -1,20 +1,21 @@
 import { Context, Markup, Telegraf, Telegram } from "telegraf";
 import { Update } from "typegram";
 import dotenv from "dotenv";
+import { LocaleService } from "./helpers/LocaleService";
+// const ls = new LocaleService(i18n);
+// const ls = LocaleService.Instance;
 import BasicCommandController from "./controllers/CommandsController";
 import NotificationController from "./controllers/NotificationController";
 // import ActionController from "./controllers/ActionController";
 import LanguageCommand from "./commands/LanguageCommand";
 import TaskCommand from "./commands/TaskCommand";
 import ListCommand from "./commands/ListCommand";
-import "./helpers/TimeFunctions";
 import { Logger } from "./helpers/Logger";
 import { message } from "telegraf/filters";
 import User from "./models/User";
 import HobbyController from "./commands/HobbyCommands";
 
 dotenv.config();
-// const ls = new LocaleService(i18n);
 
 const token: string = process.env.TELEGRAM_BOT_TOKEN as string;
 
@@ -49,6 +50,7 @@ bot.command("quit", (ctx) => {
 bot.launch();
 
 logger.info("Bot started");
+logger.info(Date.now().toString());
 
 // Enable graceful stop
 process.once("SIGINT", () => bot.stop("SIGINT"));

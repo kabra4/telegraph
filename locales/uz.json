@@ -1,24 +1,27 @@
 {
-    "start": "Bu ingliz tilidagi salom matni",
-    "lang_on_start": "Agar ingliz tilida bo'lmasa, tilda o'zgartirish uchun /lang yozing",
+    "start": "*Planner Guru* ga xush kelibsiz\\.\n\nUshbu bot sizga muhim voqealarni va vazifalarni eslatib turishga yordam beradi\\.\n\n/task Eslatma yaratish\\.\n\n/hobby Vazifa natijalarini yodda saqlash\\.\n\n/list Barcha vazifalar va xobbiy ishlarni ro'yxatdan o'tkazing\\.\n\n/lang Tilni o'zgartirish\\.\n\n/help Barcha buyruqlarni ko'rish uchun\\.\n\n/cancel Joriy amalni bekor qilish uchun\\.",
+    "lang_on_start": "Sizning tilingiz O'zbek tilimi?\nTilni o'zgartirish uchun /lang yozing",
     "help": {
-        "0": "Barcha buyruqlar",
-        "1": "/start - botni ishga tushurish",
+        "0": "Bu barcha buyruqlar.",
+        "1": "/start - botni boshlash",
         "2": "/help - barcha buyruqlarni ko'rsatish",
-        "3": "/lang - tildan o'zgartirish",
-        "4": "/task - vazifa yaratish"
+        "3": "/lang - tilni o'zgartirish",
+        "4": "list - vazifalar va xobbiy ishlarni ro'yxatdan o'tkazish",
+        "5": "/task - vazifa yaratish",
+        "6": "/hobby - xobbi yaratish",
+        "7": "/cancel - joriy amalni bekor qilish"
     },
     "lang": {
         "name": "Ingliz tili",
         "code": "en",
-        "question": "Qaysi tildan foydalanmoqchi?",
+        "question": "Qaysi tilni foydalanmoqchisiz?",
         "options": {
-            "en": "Ingliz tili",
-            "ru": "Rus tili",
-            "uz": "O'zbek tili"
+            "en": "Ingliz",
+            "ru": "Rus",
+            "uz": "O'zbek"
         },
-        "language_changed": "Til ingliz tiliga o'zgartirildi",
-        "language_has_not_changed": "Til o'zgartirilmadi"
+        "language_changed": "Til o'zgartirildi",
+        "language_has_not_changed": "Til o'zgarmadi"
     },
     "buttons": {
         "done": "Bajarildi",
@@ -29,36 +32,38 @@
         "yes": "Ha",
         "no": "Yo'q",
         "select_all": "Hammasini tanlash",
-        "deselect_all": "Hech birini tanlanmagan qilish",
+        "deselect_all": "Barchasini tanlashni bekor qilish",
         "delete": "O'chirish",
-        "deactivate": "Faolligini yo'q qilish",
-        "activate": "Faollashtirish"
+        "deactivate": "Faolligini o'chirish",
+        "activate": "Faollashtirish",
+        "sure": "Ok"
     },
     "list": {
         "empty": "Ro'yxat bo'sh",
         "no_name": "Ism yo'q",
-        "repeatable": "Takrorlanuvchi",
-        "not_repeatable": "Bir marta",
+        "repeatable": "Takrorlanadigan",
+        "not_repeatable": "Bir martalik",
         "daily": "Har kuni",
         "weekly": "Haftalik",
         "monthly": "Oylik",
         "yearly": "Yillik",
         "question": "Ko'rsatiladigan vazifalar sonini tanlang",
         "options": {
-            "all": "Hammasi",
+            "all": "Barchasi",
             "today": "Bugun",
             "tomorrow": "Ertaga",
             "week": "Bu hafta",
             "month": "Bu oy"
         },
-        "no_tasks": "Vazifalar yo'q",
+        "no_tasks": "Vazifa yo'q",
         "task_deleted": "Vazifa o'chirildi",
         "active": "Faol",
-        "inactive": "Faolsiz"
+        "inactive": "Faol emas",
+        "interval": "Oraliq"
     },
     "words": {
         "days": "Kunlar",
-        "notification": "Bildirishnomalar"
+        "notification": "Bildirishnoma"
     },
     "calendar": {
         "months": {
@@ -86,7 +91,7 @@
             "7": "Avg",
             "8": "Sen",
             "9": "Okt",
-            "10": "Noya",
+            "10": "Noy",
             "11": "Dek"
         },
         "weekdays": {
@@ -114,116 +119,154 @@
     "task": {
         "notification_on": "Yoqilgan",
         "questions": {
-          "start": {
-            "text": "Agar vazifa * takrorlanganmi?\nTug'ilgan kunlar, yubileylari kabi voqealar takrorlanadi",
-            "options": {
-              "yes": "Ha",
-              "no": "Yo'q"
-            }
-          },
-          "repeat": {
-            "text": "Vazifani necha marta takrorlashi kerak?",
-            "options": {
-              "daily": "Har kuni",
-              "weekly": "Haftalik",
-              "monthly": "Oylik",
-              "yearly": "Har yili"
+            "start": {
+                "text": "Vazifa *takrorlanishimi* kerakmi?\nTug'ilgan kunlar, yillik yubiley va boshqa voqealar takrorlanadi",
+                "options": {
+                    "yes": "Ha",
+                    "no": "Yo'q"
+                }
             },
-            "weekly": {
-              "text": "Haftaning kuniga / kunini tanlang"
+            "repeat": {
+                "text": "Vazifa qanday ko'rsatilishi kerak?",
+                "options": {
+                    "daily": "Har kuni",
+                    "weekly": "Haftalik",
+                    "monthly": "Oylik",
+                    "yearly": "Yillik",
+                    "interval": "Oraliq"
+                },
+                "weekly": {
+                    "text": "Haftaning qaysi kunlarida?"
+                },
+                "monthly": {
+                    "text": "Oyning qaysi kunlarida?"
+                },
+                "daily": {
+                    "text": "Vazifani vaqti *soat:daqiqani* formatida yuboring\\.\nMisol: 12:00 yoki 12\\.00"
+                }
             },
-            "monthly": {
-              "text": "Kunning kunini / kunini tanlang"
+            "calendar_1": {
+                "text": "Vazifa sanasini tanlang"
             },
-            "daily": {
-              "text": "Vazifani * hh: mm * \\ sifatida yuboring.\nMasalan: 12:00 yoki 12 \\ .00"
+            "send_time": {
+                "multiple": "Vazifani vaqti *soat:daqiqani* formatida yuboring\\.\nMisol: 12:00 yoki 12\\.00",
+                "single": "Vazifani vaqti *soat:daqiqani* formatida yuboring\\.\nMisol: 12:00 yoki 12\\.00"
+            },
+            "send_reminder_name": {
+                "text": "Vazifani nomini yuboring"
+            },
+            "send_reminder_text": {
+                "text": "Vazifani matnini yuboring",
+                "options": {
+                    "skip": "O'tkazib yuborish"
+                }
+            },
+            "has_it_beforehand": {
+                "text": "Voqea oldindan xabardor bo'lish kerakmi?",
+                "options": {
+                    "yes": "Ha",
+                    "no": "Yo'q"
+                }
+            },
+            "select_beforehand_time": {
+                "text": "Xabarnoma qanchalik oldin yuborilishi kerak? yoki o'zingizning vaqtingizni yuboring.\nMisol: 5 kun\nqo'llaniladigan vaqt birliklari: daqiqa, soat, kun, hafta",
+                "options": {
+                    "10 minutes": "10 daqiqa",
+                    "30 minutes": "30 daqiqa",
+                    "1 hour": "1 soat",
+                    "1 day": "1 kun",
+                    "2 days": "2 kun",
+                    "3 days": "3 kun",
+                    "1 week": "1 hafta",
+                    "1 month": "1 oy",
+                    "7 days": "7 kun",
+                    "custom": "O'zgartirilgan"
+                }
+            },
+            "custom_beforehand_time": {
+                "text": "Voqea oldindan xabarnoma qanchalik oldin yuborilishi kerak?\nMisol: 5 kun\nqo'llaniladigan vaqt birliklari: soat, kun, hafta, oy",
+                "invalid": "vazifa.questions.custom_beforehand_time.invalid"
+            },
+            "calendar_month": {
+                "text": "Vazifaning kunlarini tanlang\nBir yoki bir nechta kunni tanlash uchun ularni bosish orqali belgilashingiz mumkin",
+                "options": {
+                    "deselect_all": "Barchasini tanlashni bekor qilish",
+                    "next": "Keyingi"
+                }
+            },
+            "calendar_weekdays": {
+                "text": "Vazifaning kunlarini tanlang\nBir yoki bir nechta kunni tanlash uchun ularni bosish orqali belgilashingiz mumkin",
+                "options": {
+                    "deselect_all": "Barchasini tanlashni bekor qilish",
+                    "next": "Keyingi"
+                }
+            },
+            "calendar_multiselect": {
+                "text": "Vazifaning kunlarini tanlang\nBir yoki bir nechta kunni tanlash uchun ularni bosish orqali belgilashingiz mumkin"
+            },
+            "time": {
+                "text": "Vazifani vaqti *soat:daqiqani* formatida yuboring\\.\nMisol: 12:00 yoki 12\\.00"
+            },
+            "multiselect_calendar": {
+                "text": "Vazifaning kunlarini tanlang\nBir yoki bir nechta kunni tanlash uchun ularni bosish orqali belgilashingiz mumkin"
+            },
+            "error": {
+                "invalid_date": "Noto'g'ri sana",
+                "invalid_time": "Noto'g'ri vaqt",
+                "date_in_past": "Sana o'tgan paytda"
+            },
+            "task_name": {
+                "text": "Vazifani nomini yuboring"
+            },
+            "interval": {
+                "text": "Oraliq",
+                "time": {
+                    "text": "Qanday ko'rsatilishi kerak?\nMisol: 5 kun yoki 2 soat\ndaqiqa / soat / kun",
+                    "invalid": "Son va so'zni yuboring.\nMisol: 5 kun yoki 2 soat\ndaqiqa / soat / kun"
+                },
+                "count": {
+                    "infinity": "To'xtamasdan",
+                    "text": "Vazifa qancha marta takrorlanishi kerak?",
+                    "invalid": "0 dan ko'proq sonni yuboring"
+                }
+            },
+            "hobby_name": {
+                "text": "Hobbi nomini yuboring"
             }
-          },
-          "calendar_1": {
-            "text": "Vazifaning sanasini tanlang"
-          },
-          "send_time": {
-            "multiple": "Vazifani * hh: mm * \\ sifatida yuboring.\nMasalan: 12:00 yoki 12 \\ .00",
-            "single": "Vazifani * hh: mm * \\ sifatida yuboring.\nMasalan: 12:00 yoki 12 \\ .00"
-          },
-          "send_reminder_name": {
-            "text": "Vazifaning nomini yuboring"
-          },
-          "send_reminder_text": {
-            "text": "Vazifaning matnini yuboring",
-            "options": {
-              "skip": "O'tkazib yubormoq"
-            }
-          },
-          "has_it_beforehand": {
-            "text": "Oldindan ogohlantirishmi?",
-            "options": {
-              "yes": "Ha",
-              "no": "Yo'q"
-            }
-          },
-          "select_beforehand_time": {
-            "text": "O'zingizning vaqtingizni xabardor qilish yoki yuborish uchun qanday erta-ni tanlang.\nMasalan: 5 kun\nQo'llab-quvvatlanadigan vaqt birliklari: daqiqalar, soat, kunlar, hafta",
-            "options": {
-              "10 minutes": "10 daqiqa",
-              "30 minutes": "30 daqiqa",
-              "1 hour": "1 soat",
-              "1 day": "1 kun",
-              "2 days": "2 kun",
-              "3 days": "3 kun",
-              "1 week": "1 hafta",
-              "1 month": "1 oy",
-              "7 days": "7 kun",
-              "custom": "Odat"
-            }
-          },
-          "custom_beforehand_time": {
-            "text": "Tadbirdan oldin vaqtni yuboring.\nMasalan: 5 kun\nQo'llab-quvvatlanadigan vaqt birliklari: soat, kunlar, haftalar, oylar"
-          },
-          "calendar_month": {
-            "text": "Kun / vazifani tanlang\nSiz ularni bosish orqali bir yoki bir nechta kunni tanlashingiz mumkin",
-            "options": {
-              "deselect_all": "Barchasini bekor qiling",
-              "next": "Keyingisi"
-            }
-          },
-          "calendar_weekdays": {
-            "text": "Kun / vazifani tanlang\nSiz ularni bosish orqali bir yoki bir nechta kunni tanlashingiz mumkin",
-            "options": {
-              "deselect_all": "Barchasini bekor qiling",
-              "next": "Keyingisi"
-            }
-          },
-          "calendar_multiselect": {
-            "text": "Kun / vazifani tanlang\nSiz ularni bosish orqali bir yoki bir nechta kunni tanlashingiz mumkin"
-          },
-          "time": {
-            "text": "Vazifani * hh: mm * \\ sifatida yuboring.\nMasalan: 12:00 yoki 12 \\ .00"
-          },
-          "multiselect_calendar": {
-            "text": "Kun / vazifani tanlang\nSiz ularni bosish orqali bir yoki bir nechta kunni tanlashingiz mumkin"
-          },
-          "error": {
-            "invalid_date": "Noto'g'ri sana",
-            "invalid_time": "Vaqt noto'g'ri",
-            "date_in_past": "Sana o'tmishda"
-          },
-          "task_name": {
-            "text": "Vazifaning nomini yuboring"
-          }
         },
-        "reminder_set": "Eslatma% s ga o'rnatildi",
-        "reminder_has_not_set": "Eslatma o'rnatilmagan",
+        "reminder_set": "Eslatma muvaffaqiyatli qo'shildi: %s",
+        "reminder_has_not_set": "Eslatma qo'shilmadi",
         "created": "Vazifa muvaffaqiyatli yaratildi",
-        "no_task_found": "Hech qanday vazifalar topilmadi",
+        "no_task_found": "Vazifa topilmadi",
         "active": "Faol",
-        "inactive": "Faoliyatsiz",
+        "inactive": "Faol emas",
         "task_deleted": "Vazifa muvaffaqiyatli o'chirildi",
-        "no_name": "Ismi yo'q"
-      },
-      "days": {
+        "no_name": "Nom yo'q",
+        "info": {
+            "repeat_after_1_hour": "Bir soatdan keyin takrorlanadi"
+        }
+    },
+    "days": {
         "today": "Bugun",
         "tomorrow": "Ertaga",
         "yesterday": "Kecha"
-      }
+    },
+    "hobby": {
+        "questions": {
+            "start": {
+                "text": "Hobbi nomini yuboring"
+            },
+            "name": {
+                "text": "Hobbi nomini yuboring"
+            },
+            "answers": {
+                "text": "Javoblarni vergul bilan ajratilgan ko'rinishda yuboring \\< , \\>\\.\n\nMisol: Ha, Yo'q, Bilmayman"
+            }
+        },
+        "answers": {
+            "invalid": "Noto'g'ri kiritish"
+        },
+        "show_stats": "Statistikani ko'rsatish",
+        "hide": "Yashirish"
+    }
 }

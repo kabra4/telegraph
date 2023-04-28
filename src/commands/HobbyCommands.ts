@@ -9,6 +9,7 @@ import User from "../models/User";
 import CalendarMaker from "../helpers/CalendarMaker";
 import TimeFunctions from "../helpers/TimeFunctions";
 import CmdHelper from "../helpers/CmdHelper";
+import { chatLanguage, userFromCtx } from "../helpers/UserRegistration";
 
 import {
     hearsCtx,
@@ -38,7 +39,7 @@ export default class HobbyController {
 
     private registerCallbacks(): void {
         // receive answer from hobby
-        this.bot.action(/^hobby\|(\d+)\|log\|(.*)$/, async (ctx) => {
+        this.bot.action(/^hobby\|(\d+)\|log\|(.*)\|time\|(\d+)$/, async (ctx) => {
             this.logHobbyAnswer(ctx);
         });
 
@@ -53,10 +54,10 @@ export default class HobbyController {
     }
 
     private async askHobbyName(ctx: commandCtx, user?: User): Promise<void> {
-        user ||= await CmdHelper.userFromCtx(ctx);
+        user ||= await userFromCtx(ctx);
         user.updateCurrentlyDoing("hobby.name");
         user.resetReminderOptions({ action_type: "hobby" });
-        ls.setLocale(user.language);
+        ls.set(ctx, user.language);
         ctx.reply(ls.__("task.questions.hobby_name.text"));
     }
 
@@ -86,18 +87,19 @@ export default class HobbyController {
 
         user.updateCurrentlyDoing("hobby.answers");
 
-        ls.setLocale(user.language);
+        ls.set(ctx, user.language);
         ctx.replyWithMarkdownV2(ls.__("hobby.questions.answers.text"));
     }
 
     private isValidHobbyAnswer(text: string): boolean {
-        const reg = /^\w+([\s\,]+\w+)*$/;
+        const reg = /^\w+(\s*\,\s*\w+)*$/;
         return reg.test(text);
     }
 
     private async processHobbyAnswers(ctx: textMessageCtx, user: User) {
+        const language = await chatLanguage(ctx, user.language);
         if (!this.isValidHobbyAnswer(ctx.message.text)) {
-            ls.setLocale(user.language);
+            ls.setLocale(language);
             ctx.reply(ls.__("hobby.answers.invalid"));
             return;
         }
@@ -111,25 +113,23 @@ export default class HobbyController {
         });
 
         user.updateCurrentlyDoing("task.repeat.cycle");
-
-        ls.setLocale(user.language);
+        ls.setLocale(language);
         ctx.reply(
             ls.__("task.questions.repeat.text"),
-            CmdHelper.repeatTypesKeyboard("task.questions.repeat.options.", user.language)
+            CmdHelper.repeatTypesKeyboard("task.questions.repeat.options.", language)
         );
     }
 
     private async logHobbyAnswer(ctx: actionCtx): Promise<void> {
         const hobbyId = parseInt(ctx.match[1]);
         const answer = ctx.match[2];
+        const time = parseInt(ctx.match[3]);
 
-        const user = await User.findUser(ctx.callbackQuery.from.id);
-
-        HobbyLog.logHobbyAnswer(hobbyId, answer);
+        HobbyLog.logHobbyAnswer(hobbyId, answer, time);
 
         const hobby = await Hobby.getHobbyById(hobbyId);
 
-        ls.setLocale(user.language);
+        ls.set(ctx);
         let ctxText = hobby.name + ": " + answer;
         let button = Markup.inlineKeyboard([
             Markup.button.callback(
@@ -145,17 +145,19 @@ export default class HobbyController {
     private async showHobbyStats(ctx: actionCtx): Promise<void> {
         const hobbyId = parseInt(ctx.match[1]);
 
-        const user = await User.findUser(ctx.callbackQuery.from.id);
+        const language = await chatLanguage(ctx);
 
         const logsData = await Hobby.logsDataForStats(hobbyId);
 
         if (logsData.length === 0) {
-            ls.setLocale(user.language);
+            ls.setLocale(language);
             const text = ls.__("hobby.no_logs");
             const imageBuffer = await createNoDataImage(text, 400, 300);
             ctx.replyWithPhoto({ source: imageBuffer });
         } else {
-            const imageBuffer = await generateStackedBarChart(logsData);
+            // reverse the array
+            logsData.reverse();
+            const imageBuffer = await generateStackedBarChart(logsData, language);
             ctx.replyWithPhoto({ source: imageBuffer });
         }
     }
